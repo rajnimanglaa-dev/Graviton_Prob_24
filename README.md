@@ -1,72 +1,79 @@
-# Click 2 Clean – AI-Powered Smart Garbage Collection Platform
-> **Brand Name:** Click 2 Clean  
-> **Tagline:** Cleaner Streets. Smarter Cities.  
-> **Built for:** Municipal Civic Governance & Circular Sustainability (SDG 11 & SDG 12)
+# Click 2 Clean (FixMyArea)
 
----
+Click 2 Clean is the product name for the FixMyArea waste-reporting platform. The project includes a React interface and an Express/MySQL API for reports, SMS ingestion, image upload, notifications, AI assessment, and road-network routing.
 
-## 🌟 Executive Summary
+## Start locally
 
-**Click 2 Clean** is a civic-tech SaaS platform that connects **Citizens**, **Municipal Command Centres**, and **Garbage Collection Fleets** into an automated closed-loop lifecycle:
+1. Create an empty MySQL database named fixmyarea.
+2. Copy backend/.env.example to backend/.env and set DB values plus a unique JWT_SECRET.
+3. Run npm install.
+4. Run npm run db:migrate.
+5. Run npm run db:seed.
+6. In two terminals, run npm run server:dev and npm run dev.
+7. Open http://localhost:5173.
 
-$$\text{REPORT} \longrightarrow \text{DETECT} \longrightarrow \text{PRIORITIZE} \longrightarrow \text{ALLOCATE} \longrightarrow \text{COLLECT} \longrightarrow \text{VERIFY}$$
+## Seed accounts
 
----
+All seeded accounts use password DemoPass123!.
 
-## 🚀 Key Features
+| Role | Email |
+| --- | --- |
+| Citizen | citizen@fixmyarea.local |
+| Administrator | admin@fixmyarea.local |
+| Driver | driver@fixmyarea.local |
 
-### 1. 📸 Click 2 Clean Logo & Civic Brand Identity
-- **Logo Mark:** Modern camera shutter / click target fusing into an energetic emerald "2" and clean recycling badge.
-- **Brand Typography:** Plus Jakarta Sans & Inter with crisp municipal hierarchy.
-- **Cinematic Video Motion Background:** Organic, non-AI-looking video backdrop of clean green modern city boulevards, morning sunlight, and subtle interactive ambient particle drift.
+The frontend has no role switcher. Backend role checks protect every private API action.
 
-### 2. 🤖 AI Waste Quantity Index (WQI) Scoring Engine
-- **Multi-Factor Algorithmic Index (0–100):**
-  - **Estimated Waste Volume (40%):** Volumetric estimation in cubic meters ($m^3$).
-  - **Surface Area Spread (25%):** Ground contamination footprint in square meters ($m^2$).
-  - **Toxicity & Hazard Level (20%):** Weighted penalty for construction debris, chemicals, or decomposing organics.
-  - **Recurring Dumping Frequency (15%):** Prior dumping history at the geohash over the past 30 days.
-- **Severity Classification:** Low (0–25), Medium (26–50), High (51–75), Critical (76–100).
-- **Computer Vision Ready:** Deterministic CV pipeline structure ready for YOLOv8 or Roboflow model weights.
+## Environment
 
-### 3. 🏛️ Municipal Command Centre
-- **Emergency Priority Queue:** Ranked strictly by calculated Priority Score so critical hazards receive prompt dispatch.
-- **Interactive Leaflet & OpenStreetMap GIS:** Color-coded priority pins, hotspot density circles, and active fleet tracking.
-- **Hotspot Analytics:** Identifies persistent illegal dumping epicenters across city wards.
+See backend/.env.example.
 
-### 4. 🚛 Smart Fleet Allocation & Multi-Stop TSP Routing
-- **Vehicle Recommendation Algorithm:**
-  $$\text{Suitability} = (\text{Distance} \times 40\%) + (\text{Capacity Match} \times 30\%) + (\text{Vehicle Type Match} \times 20\%) + (\text{Workload} \times 10\%)$$
-- **Greedy Nearest-Neighbor TSP Optimizer:** Sequences collection stops to prioritize critical incidents first while minimizing deadhead mileage and fuel emissions.
+- DB_* configures MySQL.
+- JWT_SECRET, JWT_EXPIRES_IN and COOKIE_SECURE configure secure sessions.
+- CLOUDINARY_* enables Cloudinary. Without it, images are persisted under backend/uploads for a local demo.
+- XAI_API_KEY and GROK_MODEL enable server-side Grok image assessment.
+- OSRM_BASE_URL configures road-network routing.
+- PYTHON_BIN chooses the Python interpreter for the OR-Tools adapter.
+- SMS_PROVIDER_WEBHOOK_SECRET is required before using a real provider webhook.
 
-### 5. 📱 Driver Portal & Mandatory Photographic Proof
-- **Turn-by-turn navigation** connecting the Municipal Depot, assigned pickup stops, and the Regional Waste Processing Facility.
-- **Workflow State Progression:** Accept $\to$ On the Way $\to$ Arrived $\to$ Upload Cleaning Proof $\to$ Complete.
-- **Mandatory Cleaning Proof:** Drivers must capture an after-cleaning photo of the cleared ground before tickets can be marked as collected.
+Never commit backend/.env.
 
----
+## SMS demonstration
 
-## 👥 Hackathon Evaluation: Demo Credentials & Quick Switcher
+Open /sms-simulator and submit phone 9876543210 with message REPORT Sector 15, Chandigarh.
 
-For convenience during evaluation, a persistent **Quick Role Switcher** is located at the top of the screen:
+The simulator posts to the real Express endpoint. The server validates the number and format, creates both an sms_records row and a waste_reports row inside one MySQL transaction, persists an administrator notification, and emits Socket.IO updates. It does not send a telecom SMS. Retrying a request with the same Idempotency-Key does not create another report.
 
-| Role | Demo User | Identifier / Ward | Key Capabilities |
-| :--- | :--- | :--- | :--- |
-| **Citizen** | Priya Sharma | Ward 7 – Civil Lines | Photo upload, GPS detect, duplicate check, WQI lab, EcoPoints |
-| **Administrator** | Dir. Rajiv Verma | Chief Sanitation Controller | Priority queue, GIS map, vehicle allocation, route optimizer, analytics |
-| **Driver** | Rajesh Kumar | Fleet Truck #SW-TRUCK-01 | Assigned tasks, navigation map, cleaning proof camera verification |
+## AI and routing
 
----
+Citizen reports need a JPEG, PNG or WEBP photo no larger than 5 MB. The report persists before Grok analysis is attempted, so a failed or unavailable AI service cannot discard it. AI output is an unverified assessment stored in ai_analyses.
 
-## 💻 How to Run Locally
+To enable routing, install the optimizer dependency with python -m pip install -r backend/requirements.txt. The route workflow accepts only verified reports with coordinates and an administrator-supplied planning weight. It calls OSRM for road costs and Google OR-Tools for capacity-constrained optimization. It does not show a fabricated fallback route.
 
-```bash
-# 1. Navigate to the project directory
-cd C:\Users\arora\OneDrive\Desktop\Graviton\Graviton_Prob_24
+## Core API
 
-# 2. Start development server
-npm run dev
+- Auth: POST /api/auth/register, POST /api/auth/login, GET /api/auth/me
+- Reports: POST /api/reports, GET /api/reports, GET /api/reports/:id, PATCH /api/reports/:id/status
+- AI: POST /api/ai/analyze/:reportId, GET /api/ai/analysis/:reportId
+- SMS: POST /api/sms/incoming, GET /api/sms/history
+- Admin: GET /api/admin/dashboard, PATCH /api/admin/reports/:id/verify
+- Vehicles: GET and POST /api/vehicles
+- Routes: POST /api/routes/optimize, GET /api/routes
+- Notifications: GET /api/notifications, PATCH /api/notifications/:id/read
 
-# 3. Open in browser
-# http://localhost:5173
-```
+## Verification
+
+| Requirement | Status |
+| --- | --- |
+| Express plus MySQL backend | Implemented; requires configured MySQL |
+| JWT authentication and role checks | Implemented |
+| React real API integration | Implemented for auth, reports, vehicles, notifications, SMS and routes |
+| Real image upload | Implemented; Cloudinary awaits credentials |
+| Grok integration | Implemented; awaits XAI_API_KEY and model access |
+| WebSocket notifications | Implemented |
+| Frontend and backend validation | Implemented |
+| AppContext refactor | Implemented with React Query server state |
+| Error boundaries | Implemented |
+| React Query caching | Implemented |
+
+Run npm run test:backend and npm run build. Database, Cloudinary, xAI, OSRM, and OR-Tools end-to-end checks require the corresponding external configuration.

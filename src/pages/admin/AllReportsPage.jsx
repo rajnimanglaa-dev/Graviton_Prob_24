@@ -27,8 +27,10 @@ export default function AllReportsPage() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
 
   const filteredReports = reports.filter(r => {
+    if (sourceFilter !== "all" && r.source !== sourceFilter) return false;
     if (priorityFilter !== "all" && r.priority !== priorityFilter) return false;
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     if (categoryFilter !== "all") {
@@ -132,7 +134,7 @@ export default function AllReportsPage() {
           </div>
 
           {/* 3-Stream Categorization Filter */}
-          <div className="sm:col-span-3">
+          <div className="sm:col-span-2">
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -142,6 +144,19 @@ export default function AllReportsPage() {
               <option value="recyclable">🟢 Recyclable (Green)</option>
               <option value="organic">🔵 Wet / Organic (Blue)</option>
               <option value="mixed">🟡 Mixed / Other (Yellow)</option>
+            </select>
+          </div>
+
+          <div className="sm:col-span-1">
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              aria-label="Filter report source"
+              className="w-full px-3 py-2 rounded-xl bg-[#142820] border border-[#273b33] text-[#F5F7F5] font-medium focus:outline-none focus:border-[#16A36A]"
+            >
+              <option value="all">Source</option>
+              <option value="website">Website</option>
+              <option value="sms">SMS</option>
             </select>
           </div>
         </div>
@@ -159,6 +174,7 @@ export default function AllReportsPage() {
               <thead>
                 <tr className="bg-[#142820] border-b border-[#273b33] text-[#8BE0B0] font-bold uppercase tracking-wider text-[11px] font-mono">
                   <th className="py-3 px-4">Report ID</th>
+                  <th className="py-3 px-4">Source</th>
                   <th className="py-3 px-4">Waste Stream</th>
                   <th className="py-3 px-4">Location & Ward</th>
                   <th className="py-3 px-4">WQI / Priority</th>
@@ -179,11 +195,11 @@ export default function AllReportsPage() {
                       {/* ID & Photo */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={report.imageUrl}
-                            alt={report.title}
-                            className="w-10 h-10 rounded-xl object-cover border border-[#273b33] shrink-0"
-                          />
+                          {report.imageUrl ? (
+                            <img src={report.imageUrl} alt={report.title} className="w-10 h-10 rounded-xl object-cover border border-[#273b33] shrink-0" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl border border-[#273b33] bg-[#142820] grid place-items-center shrink-0 text-[#8BE0B0]">SMS</div>
+                          )}
                           <div>
                             <div className="font-mono font-bold text-[#F5F7F5]">{report.id}</div>
                             <div className="text-[10px] text-[#A5B3AA] font-mono">
@@ -191,6 +207,11 @@ export default function AllReportsPage() {
                             </div>
                           </div>
                         </div>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-[#F5F7F5] capitalize">{report.source || "website"}</div>
+                        {report.source === "sms" && <div className="max-w-[150px] truncate text-[10px] text-[#A5B3AA]" title={report.originalSms || ""}>{report.senderPhoneNumber || "Unknown sender"}</div>}
                       </td>
 
                       {/* Category */}

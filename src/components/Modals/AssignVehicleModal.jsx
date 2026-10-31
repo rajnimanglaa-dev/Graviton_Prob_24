@@ -15,16 +15,18 @@ export default function AssignVehicleModal({ report, isOpen, onClose }) {
   const bestRecommendation = recommendations[0];
   const visualCat = getWasteVisualCategory(report.category);
 
-  const handleAssign = () => {
+  const handleAssign = async () => {
     const targetId = selectedVehicleId || (bestRecommendation ? bestRecommendation.vehicle.id : null);
     if (!targetId) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      assignVehicleToReport(report.id, targetId);
+    try {
+      await assignVehicleToReport(report.id, targetId);
       setIsSubmitting(false);
       onClose();
-    }, 400);
+    } catch {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -61,7 +63,7 @@ export default function AssignVehicleModal({ report, isOpen, onClose }) {
               <span className="text-[#A5B3AA]">{report.location.address}</span>
             </div>
             <div className="text-[#A5B3AA]">
-              Stream: <strong style={{ color: visualCat.mint }}>{visualCat.name}</strong> • Est. Volume: <strong className="text-[#F5F7F5] font-stat">{report.wqi?.estimatedVolumeM3 || 2.5} m³</strong>
+              Stream: <strong style={{ color: visualCat.mint }}>{visualCat.name}</strong> • Planning weight: <strong className="text-[#F5F7F5] font-stat">{report.planningWeightKg ? report.planningWeightKg + " kg" : "needs admin review"}</strong>
             </div>
           </div>
 

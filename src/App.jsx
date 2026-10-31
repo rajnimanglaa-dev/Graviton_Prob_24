@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider } from "./context/AppContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 // Layouts
 import PublicLayout from "./layouts/PublicLayout.jsx";
@@ -12,6 +13,7 @@ import AboutPage from "./pages/public/AboutPage.jsx";
 import HowItWorksPage from "./pages/public/HowItWorksPage.jsx";
 import LiveMapPage from "./pages/public/LiveMapPage.jsx";
 import LoginPage from "./pages/public/LoginPage.jsx";
+import SmsSimulatorPage from "./pages/public/SmsSimulatorPage.jsx";
 
 // Citizen Pages
 import CitizenDashboard from "./pages/citizen/CitizenDashboard.jsx";
@@ -52,9 +54,11 @@ export default function App() {
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/live-map" element={<LiveMapPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/sms-simulator" element={<SmsSimulatorPage />} />
           </Route>
 
           {/* Citizen Portal Routes */}
+          <Route element={<ProtectedRoute roles={["citizen"]} />}>
           <Route path="/citizen" element={<DashboardLayout />}>
             <Route index element={<Navigate to="/citizen/dashboard" replace />} />
             <Route path="dashboard" element={<CitizenDashboard />} />
@@ -65,8 +69,10 @@ export default function App() {
             <Route path="community" element={<CommunityPage />} />
             <Route path="profile" element={<CitizenProfilePage />} />
           </Route>
+          </Route>
 
           {/* Admin Command Centre Routes */}
+          <Route element={<ProtectedRoute roles={["administrator"]} />}>
           <Route path="/admin" element={<DashboardLayout />}>
             <Route index element={<Navigate to="/admin/overview" replace />} />
             <Route path="overview" element={<AdminOverviewPage />} />
@@ -80,8 +86,10 @@ export default function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
           </Route>
+          </Route>
 
           {/* Driver Fleet Portal Routes */}
+          <Route element={<ProtectedRoute roles={["driver"]} />}>
           <Route path="/driver" element={<DashboardLayout />}>
             <Route index element={<Navigate to="/driver/overview" replace />} />
             <Route path="overview" element={<DriverOverviewPage />} />
@@ -89,6 +97,7 @@ export default function App() {
             <Route path="navigation" element={<DriverNavigationPage />} />
             <Route path="history" element={<DriverHistoryPage />} />
             <Route path="profile" element={<DriverProfilePage />} />
+          </Route>
           </Route>
 
           {/* Fallback */}

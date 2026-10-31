@@ -1,21 +1,33 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { INITIAL_REPORTS, INITIAL_VEHICLES, DEMO_USERS, CITIZEN_LEADERBOARD, WARD_STATISTICS, CLEANUP_EVENTS } from "../services/mockData.js";
-import { analyzeWasteImage } from "../services/aiService.js";
-import { findNearbyDuplicates } from "../services/geoService.js";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { io } from 'socket.io-client';
+import { useAuth } from './AuthContext.jsx';
+import api from '../services/api.js';
+import { CITIZEN_LEADERBOARD, WARD_STATISTICS, CLEANUP_EVENTS } from '../services/mockData.js';
 
 const AppContext = createContext(null);
+const SETTINGS_KEY = 'fixmyarea_client_preferences';
+const HOTSPOT_KEY = 'fixmyarea_hotspot_notes';
 
-const STORAGE_KEYS = {
-  REPORTS: "smartwaste_v1_reports",
-  VEHICLES: "smartwaste_v1_vehicles",
-  USER: "smartwaste_v1_current_user",
-  NOTIFICATIONS: "smartwaste_v1_notifications",
-  SETTINGS: "smartwaste_v1_settings",
-  EVENTS: "smartwaste_v1_events",
-  HOTSPOT_ACTIONS: "smartwaste_v1_hotspot_actions"
-};
+function getStoredValue(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
-const DEFAULT_SETTINGS = {
+function toUiUser(user) {
+  if (!user) return null;
+  return {
+    ...user,
+    role: user.role === 'administrator' ? 'admin' : user.role,
+    avatar: user.avatarUrl || null,
+    phone: user.phoneNumber || null
+  };
+}
+
+const defaultSettings = {
   duplicateThresholdMeters: 100,
   slaCriticalHours: 2,
   slaHighHours: 6,
@@ -24,499 +36,140 @@ const DEFAULT_SETTINGS = {
 };
 
 export function AppProvider({ children }) {
-  const [reports, setReports] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.REPORTS);
-      return saved ? JSON.parse(saved) : INITIAL_REPORTS;
-    } catch (e) {
-      return INITIAL_REPORTS;
-    }
-  });
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [settings, setSettingsState] = useState(() => getStoredValue(SETTINGS_KEY, defaultSettings));
+  const [events, setEvents] = useState(CLEANUP_EVENTS);
+  const [hotspotActions, setHotspotActions] = useState(() => getStoredValue(HOTSPOT_KEY, {}));
 
-  const [vehicles, setVehicles] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.VEHICLES);
-      return saved ? JSON.parse(saved) : INITIAL_VEHICLES;
-    } catch (e) {
-      return INITIAL_VEHICLES;
-    }
+  const reportsQuery = useQuery({
+    queryKey: ['reports', user?.id, user?.role],
+    queryFn: async () => (await api.get('/reports')).data.reports,
+    enabled: Boolean(user),
+    staleTime: 20_000
   });
-
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.USER);
-      return saved ? JSON.parse(saved) : DEMO_USERS.citizen;
-    } catch (e) {
-      return DEMO_USERS.citizen;
-    }
+  const vehiclesQuery = useQuery({
+    queryKey: ['vehicles'],
+    queryFn: async () => (await api.get('/vehicles')).data.vehicles,
+    enabled: Boolean(user),
+    staleTime: 30_000
   });
-
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-      return saved ? JSON.parse(saved) : [
-        {
-          id: "NTF-1",
-          title: "Driver En Route",
-          message: "Fleet Heavy Compactor #01 is en route to report SW-2026-1002.",
-          timestamp: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
-          read: false,
-          role: "all"
-        },
-        {
-          id: "NTF-2",
-          title: "New Critical Dumping Flagged",
-          message: "Report SW-2026-1001 flagged as Critical (WQI 88) at Sector 18.",
-          timestamp: new Date(Date.now() - 2.8 * 3600 * 1000).toISOString(),
-          read: false,
-          role: "admin"
-        }
-      ];
-    } catch (e) {
-      return [];
-    }
-  });
-
-  const [settings, setSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
-    } catch (e) {
-      return DEFAULT_SETTINGS;
-    }
-  });
-
-  const [events, setEvents] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.EVENTS);
-      return saved ? JSON.parse(saved) : CLEANUP_EVENTS;
-    } catch (e) {
-      return CLEANUP_EVENTS;
-    }
-  });
-
-  const [hotspotActions, setHotspotActions] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.HOTSPOT_ACTIONS)) || {};
-    } catch (e) {
-      return {};
-    }
+  const notificationsQuery = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: async () => (await api.get('/notifications')).data.notifications,
+    enabled: Boolean(user),
+    staleTime: 15_000
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(reports));
-  }, [reports]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify(vehicles));
-  }, [vehicles]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
-  }, [currentUser]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
-  }, [notifications]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   }, [settings]);
-
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
-  }, [events]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.HOTSPOT_ACTIONS, JSON.stringify(hotspotActions));
+    localStorage.setItem(HOTSPOT_KEY, JSON.stringify(hotspotActions));
   }, [hotspotActions]);
-
-  const addNotification = (title, message, role = "all") => {
-    const newNtf = {
-      id: "NTF-" + Date.now(),
-      title,
-      message,
-      timestamp: new Date().toISOString(),
-      read: false,
-      role
+  useEffect(() => {
+    if (!user) return undefined;
+    const origin = (import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
+    const socket = io(origin, { withCredentials: true, transports: ['websocket', 'polling'] });
+    const refresh = () => {
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['routes'] });
     };
-    setNotifications(prev => [newNtf, ...prev]);
-  };
+    socket.on('notification:new', refresh);
+    socket.on('report:changed', refresh);
+    return () => socket.disconnect();
+  }, [user, queryClient]);
 
-  const markAllNotificationsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
+  const refreshServerState = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['reports'] });
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    queryClient.invalidateQueries({ queryKey: ['routes'] });
+  }, [queryClient]);
+  const setSettings = useCallback((next) => setSettingsState((current) => typeof next === 'function' ? next(current) : next), []);
 
-  const switchRole = (role) => {
-    if (role === "admin") {
-      setCurrentUser(DEMO_USERS.admin);
-    } else if (role === "driver") {
-      setCurrentUser(DEMO_USERS.driver);
-    } else {
-      setCurrentUser(DEMO_USERS.citizen);
-    }
-  };
+  const createReport = useMutation({
+    mutationFn: async ({ file, title, category, description, location, idempotencyKey }) => {
+      const form = new FormData();
+      form.append('image', file);
+      if (title) form.append('title', title);
+      if (category) form.append('category', category);
+      if (description) form.append('description', description);
+      form.append('locationLabel', location.address);
+      if (location.ward) form.append('ward', location.ward);
+      if (Number.isFinite(location.lat)) form.append('latitude', String(location.lat));
+      if (Number.isFinite(location.lng)) form.append('longitude', String(location.lng));
+      form.append('idempotencyKey', idempotencyKey || crypto.randomUUID().replaceAll('-', ''));
+      return (await api.post('/reports', form)).data.report;
+    },
+    onSuccess: refreshServerState
+  });
+  const updateStatus = useMutation({
+    mutationFn: async ({ reportId, status, note }) => (await api.patch('/reports/' + reportId + '/status', { status, note })).data.report,
+    onSuccess: refreshServerState
+  });
+  const verify = useMutation({
+    mutationFn: async ({ reportId, action, ...details }) => (await api.patch('/admin/reports/' + reportId + '/verify', { action, ...details })).data.report,
+    onSuccess: refreshServerState
+  });
+  const assignment = useMutation({
+    mutationFn: async ({ reportId, vehicleId, note }) => (await api.patch('/reports/' + reportId + '/assign', { vehicleId, note })).data.report,
+    onSuccess: refreshServerState
+  });
 
-  const loginAs = (role) => {
-    switchRole(role);
-  };
-
-  const submitReport = ({ title, category, description, imageUrl, location, isPublicLocation = true }) => {
-    const nearby = findNearbyDuplicates(location.lat, location.lng, reports, settings.duplicateThresholdMeters);
-    const hasDuplicate = nearby.length > 0;
-    const parentReport = hasDuplicate ? nearby[0].report : null;
-
-    const recurrenceCount = hasDuplicate ? (parentReport.duplicateInfo?.corroborationCount || 1) + 1 : 1;
-    const aiResult = analyzeWasteImage({ category, recurrenceCount, isPublicLocation });
-
-    const newReportId = `SW-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const nowIso = new Date().toISOString();
-
-    const newReport = {
-      id: newReportId,
-      title: title || `${aiResult.categoryLabel} dumping reported at ${location.address || "Local Site"}`,
-      category: aiResult.category,
-      description: description || "Citizen reported waste accumulation requiring municipal clearance.",
-      imageUrl,
-      afterImageUrl: null,
-      location: {
-        lat: location.lat,
-        lng: location.lng,
-        address: location.address || "Reported Location, Ward 7",
-        ward: location.ward || "Ward 7 - Civil Lines"
-      },
-      status: "pending",
-      priority: aiResult.priority,
-      priorityScore: aiResult.priorityScore,
-      priorityReason: aiResult.priorityReason,
-      wqi: aiResult.wqi,
-      duplicateInfo: {
-        isDuplicate: hasDuplicate,
-        parentReportId: parentReport ? parentReport.id : null,
-        corroborationCount: hasDuplicate ? parentReport.duplicateInfo.corroborationCount + 1 : 1,
-        linkedReports: []
-      },
-      assignedVehicleId: null,
-      assignedDriverName: null,
-      citizenId: currentUser.id,
-      citizenName: currentUser.name,
-      citizenEmail: currentUser.email,
-      createdAt: nowIso,
-      timeline: [
-        {
-          status: "submitted",
-          timestamp: nowIso,
-          actor: `Citizen (${currentUser.name})`,
-          note: hasDuplicate
-            ? `Report lodged. Corroborated with active incident ${parentReport.id} (+20 EcoPoints)`
-            : `Report lodged with AI WQI score ${aiResult.wqi.total}/100.`
-        }
-      ]
-    };
-
-    if (hasDuplicate && parentReport) {
-      setReports(prev =>
-        prev.map(r => {
-          if (r.id === parentReport.id) {
-            const updatedCorroboration = (r.duplicateInfo?.corroborationCount || 1) + 1;
-            const updatedPriorityScore = Math.min(100, (r.priorityScore || 70) + 5);
-            return {
-              ...r,
-              priorityScore: updatedPriorityScore,
-              duplicateInfo: {
-                ...r.duplicateInfo,
-                corroborationCount: updatedCorroboration,
-                linkedReports: [...(r.duplicateInfo?.linkedReports || []), newReportId]
-              },
-              timeline: [
-                ...r.timeline,
-                {
-                  status: "corroborated",
-                  timestamp: nowIso,
-                  actor: `Citizen (${currentUser.name})`,
-                  note: `Additional citizen report corroborating waste site (+5 attention score)`
-                }
-              ]
-            };
-          }
-          return r;
-        }).concat(newReport)
-      );
-    } else {
-      setReports(prev => [newReport, ...prev]);
-    }
-
-    const pointsAwarded = hasDuplicate ? 20 : 50;
-    setCurrentUser(prev => ({
-      ...prev,
-      points: (prev.points || 0) + pointsAwarded
+  const markAllNotificationsRead = useCallback(async () => {
+    const unread = (notificationsQuery.data || []).filter((item) => !item.read);
+    await Promise.all(unread.map((item) => api.patch('/notifications/' + item.id + '/read')));
+    await queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  }, [notificationsQuery.data, queryClient]);
+  const rsvpEvent = useCallback((eventId) => {
+    setEvents((current) => current.map((event) => event.id === eventId ? { ...event, volunteersCount: event.volunteersCount + 1, isJoined: true } : event));
+  }, []);
+  const recordHotspotAction = useCallback((hotspotId, action, note = '') => {
+    setHotspotActions((current) => ({
+      ...current,
+      [hotspotId]: [...(current[hotspotId] || []), { id: 'ACT-' + Date.now(), action, note, createdAt: new Date().toISOString(), actor: user?.name || 'Municipal team' }]
     }));
+  }, [user]);
+  const optimizeRoutes = useCallback(async (payload) => {
+    const result = (await api.post('/routes/optimize', payload)).data;
+    refreshServerState();
+    return result;
+  }, [refreshServerState]);
 
-    addNotification(
-      `New ${newReport.priority.toUpperCase()} Report ${newReport.id}`,
-      `Filed by ${currentUser.name} at ${newReport.location.address}. WQI: ${aiResult.wqi.total}/100.`,
-      "admin"
-    );
-
-    return newReport;
-  };
-
-  const verifyReport = (reportId, overridePriority = null) => {
-    const nowIso = new Date().toISOString();
-    setReports(prev =>
-      prev.map(r => {
-        if (r.id === reportId) {
-          const newPriority = overridePriority || r.priority;
-          return {
-            ...r,
-            status: "verified",
-            priority: newPriority,
-            timeline: [
-              ...r.timeline,
-              {
-                status: "verified",
-                timestamp: nowIso,
-                actor: `Admin (${currentUser.name})`,
-                note: `Verified and confirmed priority as ${newPriority.toUpperCase()}.`
-              }
-            ]
-          };
-        }
-        return r;
-      })
-    );
-
-    addNotification("Report Verified", `Report ${reportId} marked as verified by Admin. Ready for vehicle assignment.`, "citizen");
-  };
-
-  const rejectReport = (reportId, reason = "Invalid or duplicate entry") => {
-    const nowIso = new Date().toISOString();
-    setReports(prev =>
-      prev.map(r => {
-        if (r.id === reportId) {
-          return {
-            ...r,
-            status: "rejected",
-            timeline: [
-              ...r.timeline,
-              {
-                status: "rejected",
-                timestamp: nowIso,
-                actor: `Admin (${currentUser.name})`,
-                note: `Report declined: ${reason}`
-              }
-            ]
-          };
-        }
-        return r;
-      })
-    );
-  };
-
-  const assignVehicleToReport = (reportId, vehicleId) => {
-    const nowIso = new Date().toISOString();
-    const targetVehicle = vehicles.find(v => v.id === vehicleId);
-    if (!targetVehicle) return;
-
-    setReports(prev =>
-      prev.map(r => {
-        if (r.id === reportId) {
-          return {
-            ...r,
-            status: "assigned",
-            assignedVehicleId: targetVehicle.id,
-            assignedDriverName: targetVehicle.driverName,
-            timeline: [
-              ...r.timeline,
-              {
-                status: "assigned",
-                timestamp: nowIso,
-                actor: `Admin (${currentUser.name})`,
-                note: `Assigned to ${targetVehicle.name} (Driver: ${targetVehicle.driverName})`
-              }
-            ]
-          };
-        }
-        return r;
-      })
-    );
-
-    setVehicles(prev =>
-      prev.map(v => {
-        if (v.id === vehicleId) {
-          return {
-            ...v,
-            assignedTasks: Array.from(new Set([...v.assignedTasks, reportId]))
-          };
-        }
-        return v;
-      })
-    );
-
-    addNotification(
-      "Task Assigned to You",
-      `New collection task ${reportId} assigned to your vehicle (${targetVehicle.name}).`,
-      "driver"
-    );
-    addNotification(
-      "Vehicle Dispatched",
-      `Vehicle ${targetVehicle.name} assigned to your report ${reportId}.`,
-      "citizen"
-    );
-  };
-
-  const updateDriverTaskStatus = (reportId, newStatus, { afterImageUrl = null, note = "" } = {}) => {
-    const nowIso = new Date().toISOString();
-    let noteText = note;
-
-    if (!noteText) {
-      if (newStatus === "on_the_way") noteText = "Driver departed depot, en route to pickup site.";
-      else if (newStatus === "arrived") noteText = "Driver arrived at waste dumping site.";
-      else if (newStatus === "collected") noteText = "Waste loaded. Cleaning verified with photographic proof.";
-      else if (newStatus === "resolved") noteText = "Verification approved. Task completed successfully.";
-    }
-
-    setReports(prev =>
-      prev.map(r => {
-        if (r.id === reportId) {
-          return {
-            ...r,
-            status: newStatus,
-            afterImageUrl: afterImageUrl || r.afterImageUrl,
-            timeline: [
-              ...r.timeline,
-              {
-                status: newStatus,
-                timestamp: nowIso,
-                actor: `Driver (${currentUser.name || "Rajesh Kumar"})`,
-                note: noteText
-              }
-            ]
-          };
-        }
-        return r;
-      })
-    );
-
-    if (newStatus === "collected" || newStatus === "resolved") {
-      addNotification(
-        `Waste Collected (${reportId})`,
-        `Cleaning proof submitted. Location cleared by Driver Rajesh Kumar.`,
-        "all"
-      );
-    } else {
-      addNotification(
-        `Status Update (${reportId})`,
-        `Driver marked task as: ${newStatus.replace("_", " ").toUpperCase()}`,
-        "all"
-      );
-    }
-  };
-
-  const resolveReport = (reportId) => {
-    const nowIso = new Date().toISOString();
-    setReports(prev =>
-      prev.map(r => {
-        if (r.id === reportId) {
-          return {
-            ...r,
-            status: "resolved",
-            timeline: [
-              ...r.timeline,
-              {
-                status: "resolved",
-                timestamp: nowIso,
-                actor: `Admin (${currentUser.name})`,
-                note: "Final municipal inspection verified. Ticket closed (+50 EcoPoints bonus awarded)."
-              }
-            ]
-          };
-        }
-        return r;
-      })
-    );
-    addNotification("Report Resolved", `Report ${reportId} has been successfully closed and marked Clean!`, "citizen");
-  };
-
-  const rsvpEvent = (eventId) => {
-    setEvents(prev =>
-      prev.map(ev => {
-        if (ev.id === eventId) {
-          return {
-            ...ev,
-            volunteersCount: ev.volunteersCount + 1,
-            isJoined: true
-          };
-        }
-        return ev;
-      })
-    );
-    setCurrentUser(prev => ({
-      ...prev,
-      points: (prev.points || 0) + 50
-    }));
-    addNotification("RSVP Confirmed", "You registered for the clean-up event! +50 EcoPoints awarded.", "citizen");
-  };
-
-  const recordHotspotAction = (hotspotId, action, note = "") => {
-    const entry = {
-      id: `ACT-${Date.now()}`,
-      action,
-      note,
-      createdAt: new Date().toISOString(),
-      actor: currentUser.name || "Municipal team"
-    };
-    setHotspotActions(prev => ({
-      ...prev,
-      [hotspotId]: [...(prev[hotspotId] || []), entry]
-    }));
-    addNotification("Hotspot intervention recorded", `${action} logged for hotspot ${hotspotId}.`, "admin");
-  };
-
-  const resetToDemoData = () => {
-    setReports(INITIAL_REPORTS);
-    setVehicles(INITIAL_VEHICLES);
-    setCurrentUser(DEMO_USERS.citizen);
-    setSettings(DEFAULT_SETTINGS);
-    setEvents(CLEANUP_EVENTS);
-    setHotspotActions({});
-    Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
-    addNotification("Demo Data Reset", "System successfully restored to initial demo state.", "all");
-  };
-
-  const value = {
-    reports,
-    vehicles,
-    currentUser,
-    notifications,
+  const value = useMemo(() => ({
+    reports: reportsQuery.data || [],
+    vehicles: vehiclesQuery.data || [],
+    currentUser: toUiUser(user),
+    notifications: notificationsQuery.data || [],
     settings,
     events,
     hotspotActions,
+    isLoading: reportsQuery.isLoading || vehiclesQuery.isLoading,
+    serverError: reportsQuery.error || vehiclesQuery.error || notificationsQuery.error,
     setSettings,
-    switchRole,
-    loginAs,
-    submitReport,
-    verifyReport,
-    rejectReport,
-    assignVehicleToReport,
-    updateDriverTaskStatus,
-    resolveReport,
+    submitReport: createReport.mutateAsync,
+    verifyReport: (reportId, details = {}) => verify.mutateAsync({ reportId, action: 'verify', ...details }),
+    rejectReport: (reportId, reason) => verify.mutateAsync({ reportId, action: 'reject', reason }),
+    assignVehicleToReport: (reportId, vehicleId, note) => assignment.mutateAsync({ reportId, vehicleId, note }),
+    updateDriverTaskStatus: (reportId, status, options = {}) => updateStatus.mutateAsync({ reportId, status, note: options.note }),
+    resolveReport: (reportId) => updateStatus.mutateAsync({ reportId, status: 'resolved', note: 'Final municipal inspection verified the report as resolved.' }),
+    markAllNotificationsRead,
     rsvpEvent,
     recordHotspotAction,
-    resetToDemoData,
-    addNotification,
-    markAllNotificationsRead,
+    refreshServerState,
+    optimizeRoutes,
+    resetToDemoData: refreshServerState,
     citizenLeaderboard: CITIZEN_LEADERBOARD,
     wardStatistics: WARD_STATISTICS
-  };
-
+  }), [reportsQuery.data, vehiclesQuery.data, notificationsQuery.data, reportsQuery.isLoading, vehiclesQuery.isLoading, reportsQuery.error, vehiclesQuery.error, notificationsQuery.error, user, settings, events, hotspotActions, setSettings, createReport.mutateAsync, verify.mutateAsync, assignment.mutateAsync, updateStatus.mutateAsync, markAllNotificationsRead, rsvpEvent, recordHotspotAction, refreshServerState, optimizeRoutes]);
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
 export function useApp() {
   const context = useContext(AppContext);
-  if (!context) {
-    throw new Error("useApp must be used within an AppProvider");
-  }
+  if (!context) throw new Error('useApp must be used within an AppProvider');
   return context;
 }

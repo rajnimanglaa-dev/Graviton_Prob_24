@@ -20,6 +20,8 @@ import AssignVehicleModal from "./AssignVehicleModal.jsx";
 export default function ReportDetailsModal({ report, isOpen, onClose }) {
   const { currentUser, verifyReport, rejectReport, resolveReport } = useApp();
   const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [planningWeightKg, setPlanningWeightKg] = useState(report?.planningWeightKg || "");
+  const [actionError, setActionError] = useState("");
 
   if (!isOpen || !report) return null;
 
@@ -100,6 +102,13 @@ export default function ReportDetailsModal({ report, isOpen, onClose }) {
               </div>
             </div>
 
+            {report.source === "sms" && (
+              <div className="rounded-2xl border border-[#3987F5]/40 bg-[#3987F5]/10 p-3.5 text-xs">
+                <span className="font-bold text-[#90c2ff]">SMS report</span>
+                <p className="mt-1 text-[#A5B3AA]">Sender: {report.senderPhoneNumber || "Unavailable"} · Original message: {report.originalSms || "Unavailable"}</p>
+              </div>
+            )}
+
             {/* Photos (Before & After if available) */}
             <div>
               <h4 className="text-xs font-bold text-[#8BE0B0] uppercase tracking-wider mb-2 font-mono">
@@ -107,19 +116,16 @@ export default function ReportDetailsModal({ report, isOpen, onClose }) {
               </h4>
               <div className={`grid ${report.afterImageUrl ? "grid-cols-2" : "grid-cols-1"} gap-4`}>
                 <div className="border border-[#273b33] rounded-2xl overflow-hidden bg-[#142820]">
-                  <div className="relative h-48">
-                    <img
-                      src={report.imageUrl}
-                      alt="Initial report photograph"
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute top-2 left-2 bg-black/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg border border-white/20">
-                      BEFORE: INITIAL REPORT
-                    </span>
-                  </div>
-                  <div className="p-2.5 text-xs text-[#A5B3AA] flex justify-between">
-                    <span>Category: <strong style={{ color: visualCat.mint }}>{visualCat.name}</strong></span>
-                    <span>WQI Score: <strong className="text-[#8BE0B0] font-stat">{report.wqi?.total || 70}/100</strong></span>
+                  {report.imageUrl ? (
+                    <div className="relative h-48">
+                      <img src={report.imageUrl} alt="Initial report photograph" className="w-full h-full object-cover" />
+                      <span className="absolute top-2 left-2 bg-black/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg border border-white/20">BEFORE: INITIAL REPORT</span>
+                    </div>
+                  ) : (
+                    <div className="h-48 grid place-items-center text-xs text-[#A5B3AA]">No photograph supplied with this SMS report.</div>
+                  )}
+                  <div className="p-2.5 text-xs text-[#A5B3AA]">
+                    Category: <strong style={{ color: visualCat.mint }}>{visualCat.name}</strong>
                   </div>
                 </div>
 
@@ -163,38 +169,17 @@ export default function ReportDetailsModal({ report, isOpen, onClose }) {
               )}
             </div>
 
-            {/* WQI Breakdown Grid */}
             <div>
-              <h4 className="text-xs font-bold text-[#8BE0B0] uppercase tracking-wider mb-2 flex items-center justify-between font-mono">
-                <span>Waste Quantity Index (WQI) Score Breakdown</span>
-                <span className="text-[#8BE0B0] font-extrabold font-stat">{report.wqi?.total || 75} / 100</span>
-              </h4>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 rounded-2xl bg-[#142820] border border-[#273b33] text-center">
-                  <div className="text-[11px] text-[#A5B3AA] mb-1">Volume (40%)</div>
-                  <div className="text-lg font-bold text-[#F5F7F5] font-stat">{report.wqi?.volumeScore || 28} / 40</div>
-                  <div className="text-[10px] text-[#A5B3AA] font-stat">~{report.wqi?.estimatedVolumeM3 || 2.4} m³</div>
+              <h4 className="text-xs font-bold text-[#8BE0B0] uppercase tracking-wider mb-2 font-mono">AI image assessment</h4>
+              {report.aiAnalysis?.status === "completed" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-2xl bg-[#142820] border border-[#273b33]"><div className="text-[#A5B3AA]">Visible materials</div><div className="mt-1 font-bold text-[#F5F7F5]">{report.aiAnalysis.visibleMaterials?.join(", ") || "None identified"}</div></div>
+                  <div className="p-3 rounded-2xl bg-[#142820] border border-[#273b33]"><div className="text-[#A5B3AA]">Suggested action</div><div className="mt-1 font-bold text-[#F5F7F5]">{report.aiAnalysis.recommendedAction}</div></div>
+                  <div className="sm:col-span-2 p-3 rounded-2xl bg-[#142820] border border-[#273b33]"><div className="text-[#A5B3AA]">Assessment</div><p className="mt-1 text-[#F5F7F5]">{report.aiAnalysis.explanation}</p><p className="mt-2 text-[10px] text-[#A5B3AA]">AI-generated assessment from visible evidence only; it does not establish physical volume, contamination, or a final municipal decision.</p></div>
                 </div>
-
-                <div className="p-3 rounded-2xl bg-[#142820] border border-[#273b33] text-center">
-                  <div className="text-[11px] text-[#A5B3AA] mb-1">Area Spread (25%)</div>
-                  <div className="text-lg font-bold text-[#F5F7F5] font-stat">{report.wqi?.areaScore || 18} / 25</div>
-                  <div className="text-[10px] text-[#A5B3AA] font-stat">~{report.wqi?.estimatedAreaM2 || 8.0} m²</div>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-[#142820] border border-[#273b33] text-center">
-                  <div className="text-[11px] text-[#A5B3AA] mb-1">Hazard / Type (20%)</div>
-                  <div className="text-lg font-bold text-[#F5F7F5] font-stat">{report.wqi?.hazardScore || 15} / 20</div>
-                  <div className="text-[10px] text-[#8BE0B0] capitalize">{report.category}</div>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-[#142820] border border-[#273b33] text-center">
-                  <div className="text-[11px] text-[#A5B3AA] mb-1">Recurrence (15%)</div>
-                  <div className="text-lg font-bold text-[#F5F7F5] font-stat">{report.wqi?.recurrenceScore || 10} / 15</div>
-                  <div className="text-[10px] text-[#A5B3AA] font-stat">{report.duplicateInfo?.corroborationCount || 1} Reports</div>
-                </div>
-              </div>
+              ) : (
+                <div className="p-3 rounded-2xl bg-[#142820] border border-[#273b33] text-xs text-[#A5B3AA]">{report.imageUrl ? "Assessment is pending, unavailable, or needs a retry. It will never block report verification." : "SMS reports have no photograph, so photo analysis is not applicable."}</div>
+              )}
             </div>
 
             {/* Lifecycle Timeline */}
@@ -236,9 +221,30 @@ export default function ReportDetailsModal({ report, isOpen, onClose }) {
               <div className="flex items-center gap-2">
                 {report.status === "pending" && (
                   <>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={planningWeightKg}
+                      onChange={(event) => setPlanningWeightKg(event.target.value)}
+                      placeholder="Planning weight (kg)"
+                      className="w-36 rounded-xl border border-[#273b33] bg-[#101A17] px-3 py-2 text-xs text-white"
+                    />
                     <button
                       type="button"
-                      onClick={() => { verifyReport(report.id); onClose(); }}
+                      onClick={async () => {
+                        setActionError("");
+                        if (!planningWeightKg || Number(planningWeightKg) <= 0) {
+                          setActionError("Enter an administrator planning weight in kg before verification.");
+                          return;
+                        }
+                        try {
+                          await verifyReport(report.id, { estimatedWeightKg: Number(planningWeightKg) });
+                          onClose();
+                        } catch (error) {
+                          setActionError(error.userMessage || error.message || "Verification failed.");
+                        }
+                      }}
                       className="px-3.5 py-2 rounded-xl bg-[#16A36A] text-white hover:bg-[#0f7a4e] text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-[#16A36A]/30"
                     >
                       <CheckCircle2 size={14} />
@@ -246,7 +252,15 @@ export default function ReportDetailsModal({ report, isOpen, onClose }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => { rejectReport(report.id, "Invalid or private property"); onClose(); }}
+                      onClick={async () => {
+                        setActionError("");
+                        try {
+                          await rejectReport(report.id, "Invalid or private property");
+                          onClose();
+                        } catch (error) {
+                          setActionError(error.userMessage || error.message || "Rejection failed.");
+                        }
+                      }}
                       className="px-3.5 py-2 rounded-xl bg-red-600/20 border border-red-500/40 text-red-300 hover:bg-red-600 hover:text-white text-xs font-bold transition flex items-center gap-1.5"
                     >
                       <Ban size={14} />
@@ -276,6 +290,7 @@ export default function ReportDetailsModal({ report, isOpen, onClose }) {
                     <span>Approve Proof & Close Ticket</span>
                   </button>
                 )}
+                {actionError && <span className="basis-full text-xs text-red-300">{actionError}</span>}
               </div>
             )}
           </div>

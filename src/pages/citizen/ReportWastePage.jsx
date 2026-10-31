@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext.jsx";
-import { SAMPLE_IMAGES } from "../../services/mockData.js";
 import { findNearbyDuplicates } from "../../services/geoService.js";
 import { getWasteVisualCategory } from "../../services/wasteCategoryTheme.js";
 import AnimatedDustbin from "../../components/UI/AnimatedDustbin.jsx";
@@ -26,20 +25,21 @@ export default function ReportWastePage() {
   const { reports, submitReport, settings } = useApp();
 
   // Form State
-  const [selectedPhoto, setSelectedPhoto] = useState(SAMPLE_IMAGES.plastic);
-  const [photoPreview, setPhotoPreview] = useState(SAMPLE_IMAGES.plastic);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [category, setCategory] = useState("plastic");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState({
-    lat: 28.6285,
-    lng: 77.2185,
-    address: "Behind Market Gate 4, Sector 18 Commercial Complex",
-    ward: "Ward 7 - Civil Lines"
+    lat: null,
+    lng: null,
+    address: "",
+    ward: ""
   });
   const [isLocating, setIsLocating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedReport, setSubmittedReport] = useState(null);
+  const [formError, setFormError] = useState("");
 
   // Real-time Duplicate Detection check
   const [nearbyDuplicates, setNearbyDuplicates] = useState([]);
@@ -59,21 +59,19 @@ export default function ReportWastePage() {
   // Handle file upload
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setSelectedPhoto(reader.result);
-        setPhotoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    setFormError("");
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setFormError("Choose a JPEG, PNG, or WEBP image.");
+      return;
     }
-  };
-
-  // Quick preset sample photos
-  const setPresetPhoto = (type, url, defaultCategory) => {
-    setSelectedPhoto(url);
-    setPhotoPreview(url);
-    setCategory(defaultCategory);
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError("Image must be 5 MB or smaller.");
+      return;
+    }
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setSelectedPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
   // GPS Auto-detect
@@ -90,47 +88,45 @@ export default function ReportWastePage() {
             ward: "Ward 7 - Civil Lines"
           });
         },
-        (error) => {
+        () => {
           setIsLocating(false);
-          setLocation({
-            lat: 28.6210,
-            lng: 77.2160,
-            address: "Main Commercial Market Rd, Sector 14, Ward 7",
-            ward: "Ward 7 - Civil Lines"
-          });
+          setFormError("Location permission was not granted. Enter the address manually.");
         },
         { timeout: 6000 }
       );
     } else {
       setIsLocating(false);
-      setLocation({
-        lat: 28.6210,
-        lng: 77.2160,
-        address: "Main Commercial Market Rd, Sector 14, Ward 7",
-        ward: "Ward 7 - Civil Lines"
-      });
+      setFormError("Geolocation is unavailable. Enter the address manually.");
     }
   };
 
   // Submit Handler
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!photoPreview) return;
-
+    setFormError("");
+    if (!selectedPhoto) {
+      setFormError("A valid photograph is required before submitting a report.");
+      return;
+    }
+    if (!location.address.trim()) {
+      setFormError("Enter a location or landmark.");
+      return;
+    }
     setIsSubmitting(true);
-
-    setTimeout(() => {
-      const newReport = submitReport({
-        title: title || `${category.toUpperCase()} dumping near ${location.address}`,
+    try {
+      const newReport = await submitReport({
+        file: selectedPhoto,
+        title: title || category.toUpperCase() + " dumping near " + location.address,
         category,
         description,
-        imageUrl: photoPreview,
         location
       });
-
-      setIsSubmitting(false);
       setSubmittedReport(newReport);
-    }, 900);
+    } catch (error) {
+      setFormError(error.userMessage || error.message || "The report could not be submitted. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const activeVisual = getWasteVisualCategory(category);
@@ -166,57 +162,8 @@ export default function ReportWastePage() {
             </span>
           </div>
 
-          {/* Quick Preset Selector for Easy Testing */}
-          <div>
-            <span className="text-[11px] font-bold text-[#A5B3AA] uppercase tracking-wider block mb-2 font-mono">
-              Quick Test Presets (Click to preview different waste classes):
-            </span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setPresetPhoto("plastic", SAMPLE_IMAGES.plastic, "plastic")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
-                  photoPreview === SAMPLE_IMAGES.plastic
-                    ? "bg-[#16A36A] text-white border-[#16A36A]"
-                    : "bg-[#142820] text-[#A5B3AA] border-[#273b33] hover:text-white"
-                }`}
-              >
-                🟢 Plastic (Green Stream)
-              </button>
-              <button
-                type="button"
-                onClick={() => setPresetPhoto("organic", SAMPLE_IMAGES.organic, "organic")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
-                  photoPreview === SAMPLE_IMAGES.organic
-                    ? "bg-[#3987F5] text-white border-[#3987F5]"
-                    : "bg-[#142820] text-[#A5B3AA] border-[#273b33] hover:text-white"
-                }`}
-              >
-                🔵 Organic / Food (Blue Stream)
-              </button>
-              <button
-                type="button"
-                onClick={() => setPresetPhoto("construction", SAMPLE_IMAGES.construction, "construction")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
-                  photoPreview === SAMPLE_IMAGES.construction
-                    ? "bg-[#F4C542] text-[#101A17] border-[#F4C542]"
-                    : "bg-[#142820] text-[#A5B3AA] border-[#273b33] hover:text-white"
-                }`}
-              >
-                🟡 Construction Debris (Yellow Stream)
-              </button>
-              <button
-                type="button"
-                onClick={() => setPresetPhoto("dumpster", SAMPLE_IMAGES.dumpster, "mixed")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
-                  photoPreview === SAMPLE_IMAGES.dumpster
-                    ? "bg-[#F4C542] text-[#101A17] border-[#F4C542]"
-                    : "bg-[#142820] text-[#A5B3AA] border-[#273b33] hover:text-white"
-                }`}
-              >
-                🟡 Mixed Roadside Pile
-              </button>
-            </div>
+          <div className="rounded-xl border border-[#273b33] bg-[#142820] px-3 py-2 text-[11px] text-[#A5B3AA]">
+            Upload an original JPEG, PNG, or WEBP photo (maximum 5 MB). Sample previews are intentionally disabled because every submitted report must include an actual uploaded image.
           </div>
 
           {/* Photo Preview Canvas + Integrated Animated Dustbin */}
@@ -265,10 +212,10 @@ export default function ReportWastePage() {
               <label className="w-full flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#273b33] hover:border-[#16A36A] rounded-2xl cursor-pointer bg-[#142820]/60 hover:bg-[#142820] transition text-center">
                 <Upload size={20} className="text-[#8BE0B0] mb-1" />
                 <span className="text-xs font-bold text-[#F5F7F5]">Upload New Photo</span>
-                <span className="text-[10px] text-[#A5B3AA]">PNG, JPG, or WEBP up to 10MB</span>
+                <span className="text-[10px] text-[#A5B3AA]">PNG, JPG, or WEBP up to 5MB</span>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
@@ -423,6 +370,11 @@ export default function ReportWastePage() {
         </div>
 
         {/* Submission Button */}
+        {formError && (
+          <div role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-xs text-red-200">
+            {formError}
+          </div>
+        )}
         <div className="flex items-center justify-between pt-2">
           <button
             type="button"
@@ -468,29 +420,10 @@ export default function ReportWastePage() {
 
             {/* Modal Content */}
             <div className="p-6 space-y-5">
-              {/* AI WQI Score Highlight */}
-              <div className="p-4 rounded-2xl bg-[#142820] border border-[#273b33] text-center space-y-1">
-                <span className="text-[11px] font-bold text-[#8BE0B0] uppercase tracking-widest font-mono">
-                  AI Waste Quantity Index (WQI)
-                </span>
-                <div className="text-3xl font-black text-[#F5F7F5] font-stat">
-                  {submittedReport.wqi.total} <span className="text-base font-normal text-[#A5B3AA]">/ 100</span>
-                </div>
-                <div className="inline-block px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-[#16A36A]/20 border border-[#16A36A] text-[#8BE0B0]">
-                  {submittedReport.wqi.severityLevel} Severity Level
-                </div>
-              </div>
-
-              {/* Breakdown chips */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2.5 bg-[#142820] rounded-xl border border-[#273b33]">
-                  <div className="text-[#A5B3AA] text-[10px]">Estimated Volume</div>
-                  <div className="font-bold text-[#F5F7F5] font-stat">{submittedReport.wqi.estimatedVolumeM3 || 2.4} m³</div>
-                </div>
-                <div className="p-2.5 bg-[#142820] rounded-xl border border-[#273b33]">
-                  <div className="text-[#A5B3AA] text-[10px]">Recommended Vehicle</div>
-                  <div className="font-bold text-[#8BE0B0]">{submittedReport.wqi.recommendedVehicle}</div>
-                </div>
+              <div className="p-4 rounded-2xl bg-[#142820] border border-[#273b33] text-center space-y-2">
+                <span className="text-[11px] font-bold text-[#8BE0B0] uppercase tracking-widest font-mono">AI assessment status</span>
+                <div className="text-sm font-bold text-[#F5F7F5]">Your photo was stored and the report is pending municipal verification.</div>
+                <p className="text-[11px] text-[#A5B3AA]">When Grok is configured, its evidence-based assessment is requested after upload and will appear on your report. AI does not determine the final municipal decision.</p>
               </div>
 
               <p className="text-xs text-[#A5B3AA] leading-relaxed text-center">
