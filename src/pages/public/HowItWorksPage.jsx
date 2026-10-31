@@ -23,11 +23,11 @@ export default function HowItWorksPage() {
       title: "Citizen Reports Waste",
       actor: "Citizen Portal",
       icon: Camera,
-      short: "Capture photo, auto-detect GPS, and select preliminary category.",
+      short: "Capture photo, auto-detect GPS, and select 3-stream preliminary category.",
       details: [
-        "Citizens take or upload a clear photo of roadside dumping via mobile or web.",
-        "Automatic HTML5 browser geolocation captures precise latitude and longitude.",
-        "Manual pin adjustments on an interactive map ensure exact street-level accuracy.",
+        "Citizens take or upload a clear photo of roadside dumping via smartphone camera or browser.",
+        "Automatic HTML5 browser geolocation captures precise latitude and longitude coordinates.",
+        "Manual pin adjustments on an interactive CartoDB dark map ensure exact street-level accuracy.",
         "Proximity engine checks for nearby existing reports within 100 meters to flag potential duplicates."
       ],
       tag: "Step 1 of 7"
@@ -37,12 +37,12 @@ export default function HowItWorksPage() {
       title: "AI Image Analysis",
       actor: "Computer Vision Engine",
       icon: Cpu,
-      short: "YOLO / CV pipeline classifies waste type, bounds clusters, and estimates volume.",
+      short: "CV pipeline classifies waste stream into Green/Blue/Yellow & estimates volume.",
       details: [
         "Deterministic CV pipeline inspects image textures, boundaries, and visual spread.",
-        "Detects predominant category: Plastic, Construction Debris, Organic, Household, or Mixed.",
-        "Calculates confidence score (typically 90%–97%).",
-        "Calculates approximate volumetric size in cubic meters (m³) and surface area (m²)."
+        "Maps debris to standard 3 streams: Recyclable (Green), Wet/Organic (Blue), or Mixed/Other (Yellow).",
+        "Calculates confidence score (typically 92%–97%).",
+        "Estimates approximate volumetric size in cubic meters (m³) and surface area footprint (m²)."
       ],
       tag: "Step 2 of 7"
     },
@@ -119,17 +119,17 @@ export default function HowItWorksPage() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16 text-[#F5F7F5]">
       {/* Title */}
       <div className="text-center space-y-4">
-        <span className="text-xs font-bold text-[#174C37] uppercase tracking-widest">
-          End-to-End Civic Architecture
+        <span className="text-xs font-bold text-[#8BE0B0] uppercase tracking-widest font-mono">
+          END-TO-END CIVIC ARCHITECTURE
         </span>
-        <h1 className="text-3xl sm:text-4xl font-black text-[#202923] tracking-tight">
-          How SmartWaste Operates
+        <h1 className="text-3xl sm:text-4xl font-black text-[#F5F7F5] tracking-tight font-heading">
+          How Click 2 Clean Operates
         </h1>
-        <p className="text-base text-stone-600 max-w-2xl mx-auto leading-relaxed">
-          Explore the 7 synchronized steps of the closed-loop governance workflow from initial citizen capture to final verified disposal.
+        <p className="text-base text-[#A5B3AA] max-w-2xl mx-auto leading-relaxed">
+          Explore the 7 synchronized stages of the closed-loop governance workflow from initial citizen click to final verified disposal.
         </p>
       </div>
 
@@ -139,38 +139,38 @@ export default function HowItWorksPage() {
           <button
             key={i}
             onClick={() => setActiveTab(i)}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-2 font-heading ${
               activeTab === i
-                ? "bg-[#174C37] text-white shadow-sm"
-                : "bg-white border border-stone-200 text-stone-600 hover:bg-stone-50"
+                ? "bg-[#16A36A] text-white shadow-md shadow-[#16A36A]/30"
+                : "bg-[#142820] border border-[#273b33] text-[#A5B3AA] hover:text-white hover:bg-[#1D2B25]"
             }`}
           >
-            <span>{st.number}</span>
+            <span className="font-mono text-[#8BE0B0]">{st.number}</span>
             <span className="hidden sm:inline">{st.title.split(" ")[0]}</span>
           </button>
         ))}
       </div>
 
       {/* Active Step Feature Box */}
-      <div className="p-8 sm:p-10 rounded-3xl bg-white border border-stone-200 shadow-md space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
+      <div className="p-8 sm:p-10 rounded-3xl bg-[#1D2B25] border border-[#273b33] shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#273b33]">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-[#174C37] flex items-center justify-center font-black text-2xl">
+            <div className="w-14 h-14 rounded-2xl bg-[#16A36A]/20 border border-[#16A36A] text-[#8BE0B0] flex items-center justify-center font-black text-2xl font-stat">
               {steps[activeTab].number}
             </div>
             <div>
-              <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+              <span className="text-xs font-bold text-[#8BE0B0] uppercase tracking-wider font-mono">
                 {steps[activeTab].actor}
               </span>
-              <h3 className="text-2xl font-black text-stone-900">{steps[activeTab].title}</h3>
+              <h3 className="text-2xl font-black text-[#F5F7F5] font-heading">{steps[activeTab].title}</h3>
             </div>
           </div>
-          <span className="px-3 py-1 rounded-full bg-stone-100 text-stone-600 text-xs font-semibold w-fit">
+          <span className="px-3 py-1 rounded-full bg-[#101A17] border border-[#273b33] text-[#8BE0B0] text-xs font-semibold w-fit">
             {steps[activeTab].tag}
           </span>
         </div>
 
-        <p className="text-base text-stone-800 font-medium">
+        <p className="text-base text-[#F5F7F5] font-medium leading-relaxed">
           {steps[activeTab].short}
         </p>
 
@@ -179,9 +179,9 @@ export default function HowItWorksPage() {
           {steps[activeTab].details.map((point, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-xl bg-stone-50 border border-stone-200/80 text-xs text-stone-700 leading-relaxed flex items-start gap-2.5"
+              className="p-4 rounded-2xl bg-[#142820] border border-[#273b33] text-xs text-[#A5B3AA] leading-relaxed flex items-start gap-2.5"
             >
-              <CheckCircle2 size={16} className="text-[#174C37] shrink-0 mt-0.5" />
+              <CheckCircle2 size={16} className="text-[#16A36A] shrink-0 mt-0.5" />
               <span>{point}</span>
             </div>
           ))}
@@ -190,7 +190,7 @@ export default function HowItWorksPage() {
 
       {/* Visual All Steps Timeline Card */}
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-stone-900">
+        <h3 className="text-lg font-bold text-[#F5F7F5] font-heading">
           Complete Lifecycle Sequence
         </h3>
         <div className="space-y-3">
@@ -202,26 +202,26 @@ export default function HowItWorksPage() {
                 onClick={() => setActiveTab(i)}
                 className={`p-4 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
                   activeTab === i
-                    ? "bg-emerald-50/70 border-[#174C37] shadow-xs"
-                    : "bg-white border-stone-200 hover:border-stone-300"
+                    ? "bg-[#1D2B25] border-[#16A36A] shadow-md shadow-[#16A36A]/20"
+                    : "bg-[#142820] border-[#273b33] hover:border-[#16A36A]/40"
                 }`}
               >
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${
-                    activeTab === i ? "bg-[#174C37] text-white" : "bg-stone-100 text-stone-600"
+                    activeTab === i ? "bg-[#16A36A] text-white" : "bg-[#101A17] text-[#8BE0B0] border border-[#273b33]"
                   }`}>
                     <Icon size={18} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-sm text-stone-800">{st.title}</span>
-                      <span className="text-[10px] font-semibold text-stone-400">({st.actor})</span>
+                      <span className="font-extrabold text-sm text-[#F5F7F5] font-heading">{st.title}</span>
+                      <span className="text-[10px] font-semibold text-[#8BE0B0] font-mono">({st.actor})</span>
                     </div>
-                    <p className="text-xs text-stone-500 line-clamp-1">{st.short}</p>
+                    <p className="text-xs text-[#A5B3AA] line-clamp-1">{st.short}</p>
                   </div>
                 </div>
 
-                <div className="text-xs font-bold text-[#174C37] hidden sm:block">
+                <div className="text-xs font-bold text-[#8BE0B0] hidden sm:block">
                   View Specs →
                 </div>
               </div>
@@ -231,16 +231,16 @@ export default function HowItWorksPage() {
       </div>
 
       {/* Bottom CTA */}
-      <div className="p-8 rounded-3xl bg-[#174C37] text-white flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="p-8 rounded-3xl bg-[#1D2B25] border border-[#273b33] text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
         <div>
-          <h3 className="text-xl font-bold">Try the workflow live right now</h3>
-          <p className="text-xs text-white/80 mt-1">
-            Submit a test report and observe it propagate immediately to Admin and Driver portals.
+          <h3 className="text-xl font-bold font-heading text-[#F5F7F5]">Try the workflow live right now</h3>
+          <p className="text-xs text-[#A5B3AA] mt-1">
+            Submit a test report and observe it propagate immediately to Admin Priority Queue and Driver console.
           </p>
         </div>
         <Link
           to="/citizen/report"
-          className="px-6 py-3 rounded-xl bg-white text-[#174C37] text-xs font-bold hover:bg-stone-100 transition whitespace-nowrap shadow-sm"
+          className="px-6 py-3 rounded-xl bg-[#16A36A] text-white text-xs font-bold hover:bg-[#0f7a4e] transition whitespace-nowrap shadow-md shadow-[#16A36A]/30"
         >
           Submit Test Waste Report
         </Link>

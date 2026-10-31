@@ -1,4 +1,5 @@
-# SmartWaste – AI-Powered Smart Garbage Collection Platform
+# Click 2 Clean – AI-Powered Smart Garbage Collection Platform
+> **Brand Name:** Click 2 Clean  
 > **Tagline:** Cleaner Streets. Smarter Cities.  
 > **Built for:** Municipal Civic Governance & Circular Sustainability (SDG 11 & SDG 12)
 
@@ -6,7 +7,7 @@
 
 ## 🌟 Executive Summary
 
-**SmartWaste** is a civic-tech SaaS platform that connects **Citizens**, **Municipal Command Centres**, and **Garbage Collection Fleets** into an automated closed-loop lifecycle:
+**Click 2 Clean** is a civic-tech SaaS platform that connects **Citizens**, **Municipal Command Centres**, and **Garbage Collection Fleets** into an automated closed-loop lifecycle:
 
 $$\text{REPORT} \longrightarrow \text{DETECT} \longrightarrow \text{PRIORITIZE} \longrightarrow \text{ALLOCATE} \longrightarrow \text{COLLECT} \longrightarrow \text{VERIFY}$$
 
@@ -14,9 +15,10 @@ $$\text{REPORT} \longrightarrow \text{DETECT} \longrightarrow \text{PRIORITIZE} 
 
 ## 🚀 Key Features
 
-### 1. 📸 Citizen Reporting & Spatial Duplicate Detection
-- **Geo-Tagged Capture:** Take photos with automatic GPS geocoding or manual pin selection.
-- **Real-Time Duplicate Clustered Detection:** Geofenced 100m proximity algorithm prevents duplicate dispatches and groups neighbor reports into upvotes, boosting the attention score.
+### 1. 📸 Click 2 Clean Logo & Civic Brand Identity
+- **Logo Mark:** Modern camera shutter / click target fusing into an energetic emerald "2" and clean recycling badge.
+- **Brand Typography:** Plus Jakarta Sans & Inter with crisp municipal hierarchy.
+- **Cinematic Video Motion Background:** Organic, non-AI-looking video backdrop of clean green modern city boulevards, morning sunlight, and subtle interactive ambient particle drift.
 
 ### 2. 🤖 AI Waste Quantity Index (WQI) Scoring Engine
 - **Multi-Factor Algorithmic Index (0–100):**
@@ -42,16 +44,11 @@ $$\text{REPORT} \longrightarrow \text{DETECT} \longrightarrow \text{PRIORITIZE} 
 - **Workflow State Progression:** Accept $\to$ On the Way $\to$ Arrived $\to$ Upload Cleaning Proof $\to$ Complete.
 - **Mandatory Cleaning Proof:** Drivers must capture an after-cleaning photo of the cleared ground before tickets can be marked as collected.
 
-### 6. 🔄 Real-Time Multi-Portal Data Synchronization
-- Changes made in the **Citizen Portal** (e.g. new complaint) immediately appear in the **Admin Command Centre** and **Live GIS Map**.
-- When an **Admin** assigns a truck, the **Driver** receives the work order in real time.
-- When the **Driver** updates status and uploads cleaning proof, the **Citizen** receives an instant update and earns **EcoPoints**.
-
 ---
 
 ## 👥 Hackathon Evaluation: Demo Credentials & Quick Switcher
 
-For convenience during evaluation, a persistent **Quick Role Switcher** is located at the top of the screen. You can also use the **1-Click Demo Login** on the `/login` page:
+For convenience during evaluation, a persistent **Quick Role Switcher** is located at the top of the screen:
 
 | Role | Demo User | Identifier / Ward | Key Capabilities |
 | :--- | :--- | :--- | :--- |
@@ -61,30 +58,15 @@ For convenience during evaluation, a persistent **Quick Role Switcher** is locat
 
 ---
 
-## 🛠️ Tech Stack
-
-- **Framework:** React 19 + Vite 8
-- **Routing:** React Router 7
-- **Styling:** Tailwind CSS v4 + Plus Jakarta Sans Typography
-- **Icons:** Lucide React
-- **Maps & GIS:** Leaflet + OpenStreetMap + Custom SVG DivIcons
-- **Data Visualizations:** Recharts (Monthly trends, Ward efficiency, Category distributions)
-- **State Management:** Reactive Central Context with `localStorage` persistence and multi-portal event propagation.
-
----
-
 ## 💻 How to Run Locally
 
 ```bash
 # 1. Navigate to the project directory
 cd C:\Users\arora\OneDrive\Desktop\Graviton\Graviton_Prob_24
 
-# 2. Install dependencies (if not already installed)
-npm install
-
-# 3. Start development server
+# 2. Start development server
 npm run dev
 
-# 4. Open in browser
+# 3. Open in browser
 # http://localhost:5173
 ```

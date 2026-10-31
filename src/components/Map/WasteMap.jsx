@@ -2,40 +2,58 @@ import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { DEFAULT_MAP_CENTER } from "../../services/geoService.js";
-import { Filter, Layers, Navigation, Truck, AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
+import { getWasteVisualCategory } from "../../services/wasteCategoryTheme.js";
+import { Filter, Layers, Navigation, Truck, AlertTriangle, CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
 
-// Priority marker icon colors
+// Priority accent colors
 const PRIORITY_COLORS = {
-  critical: "#DC2626", // Red-600
-  high: "#EA580C",     // Orange-600
-  medium: "#D97706",   // Amber-600
-  low: "#16A34A",      // Green-600
-  resolved: "#174C37"  // Forest Green
+  critical: "#EF4444", // Red-500
+  high: "#F97316",     // Orange-500
+  medium: "#F59E0B",   // Amber-500
+  low: "#10B981",      // Emerald-500
+  resolved: "#16A36A"  // Primary Green
 };
 
-// Custom DivIcon generator for waste reports
-function createReportIcon(priority, status) {
-  const isResolved = status === "resolved";
-  const color = isResolved ? PRIORITY_COLORS.resolved : (PRIORITY_COLORS[priority] || "#D97706");
-  
+// Custom DivIcon generator using the 3-Color Categorization System + Priority Pulse
+function createReportIcon(report) {
+  const isResolved = report.status === "resolved";
+  const visualCat = getWasteVisualCategory(report.category);
+  const color = isResolved ? "#16A36A" : visualCat.color;
+  const isCritical = report.priority === "critical" && !isResolved;
+
   const iconHtml = `
-    <div style="
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 34px;
-      height: 34px;
-      background-color: ${color};
-      color: white;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
-      border: 2px solid white;
-      cursor: pointer;
-    ">
-      <div style="transform: rotate(45deg); font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center;">
-        ${isResolved ? "✓" : "!"}
+    <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+      ${
+        isCritical
+          ? `<div style="
+              position: absolute;
+              inset: -6px;
+              border-radius: 50%;
+              background-color: ${color};
+              opacity: 0.35;
+              animation: gentlePulse 2s infinite;
+            "></div>`
+          : ""
+      }
+      <div style="
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background-color: ${color};
+        color: white;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+        border: 2px solid #F5F7F5;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      ">
+        <div style="transform: rotate(45deg); font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; font-family: sans-serif;">
+          ${isResolved ? "✓" : "!"}
+        </div>
       </div>
     </div>
   `;
@@ -43,16 +61,16 @@ function createReportIcon(priority, status) {
   return L.divIcon({
     className: "custom-waste-marker",
     html: iconHtml,
-    iconSize: [34, 34],
-    iconAnchor: [17, 34],
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
     popupAnchor: [0, -32]
   });
 }
 
-// Custom DivIcon for municipal trucks
+// Custom DivIcon for municipal trucks in dark theme
 function createVehicleIcon(vehicle) {
   const isAvailable = vehicle.status === "available";
-  const color = isAvailable ? "#174C37" : "#0284C7"; // Forest Green or Sky Blue
+  const color = isAvailable ? "#16A36A" : "#3987F5";
 
   const iconHtml = `
     <div style="
@@ -62,14 +80,14 @@ function createVehicleIcon(vehicle) {
       justify-content: center;
       width: 36px;
       height: 36px;
-      background-color: ${color};
-      color: white;
+      background-color: #101A17;
+      color: ${color};
       border-radius: 50%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      border: 2px solid white;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+      border: 2px solid ${color};
       cursor: pointer;
     ">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path>
         <path d="M15 18H9"></path>
         <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14v10Z"></path>
@@ -111,10 +129,10 @@ export default function WasteMap({
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Initialize Map
+  // Initialize Map with CartoDB Dark Matter tiles
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    if (mapInstanceRef.current) return; // already initialized
+    if (mapInstanceRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
       center: [DEFAULT_MAP_CENTER.lat, DEFAULT_MAP_CENTER.lng],
@@ -123,18 +141,17 @@ export default function WasteMap({
       attributionControl: true
     });
 
-    // Clean OpenStreetMap tiles
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: 'Map data (c) OpenStreetMap contributors | SmartWaste GIS',
+    // CartoDB Dark Matter tiles for premium dark environmental-tech theme
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
+      subdomains: "abcd",
       maxZoom: 19
     }).addTo(map);
 
-    // Initialize feature groups
     markersLayerRef.current = L.featureGroup().addTo(map);
     vehiclesLayerRef.current = L.featureGroup().addTo(map);
     heatmapLayerRef.current = L.featureGroup().addTo(map);
 
-    // Click handler for map if enabled
     if (onMapClick) {
       map.on("click", (e) => {
         onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
@@ -162,7 +179,10 @@ export default function WasteMap({
     const filteredReports = reports.filter(r => {
       if (filterPriority !== "all" && r.priority !== filterPriority) return false;
       if (filterStatus !== "all" && r.status !== filterStatus) return false;
-      if (filterCategory !== "all" && r.category !== filterCategory) return false;
+      if (filterCategory !== "all") {
+        const visual = getWasteVisualCategory(r.category);
+        if (visual.group !== filterCategory && r.category !== filterCategory) return false;
+      }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const titleMatch = (r.title || "").toLowerCase().includes(q);
@@ -177,50 +197,57 @@ export default function WasteMap({
     filteredReports.forEach(report => {
       if (!report.location || !report.location.lat || !report.location.lng) return;
 
+      const visualCat = getWasteVisualCategory(report.category);
       const marker = L.marker([report.location.lat, report.location.lng], {
-        icon: createReportIcon(report.priority, report.status)
+        icon: createReportIcon(report)
       });
 
       const popupContent = `
-        <div style="font-family: system-ui, sans-serif; min-width: 230px; max-width: 280px; padding: 12px; color: #202923;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-            <span style="font-size: 11px; font-weight: 700; color: #526056; text-transform: uppercase;">${report.id}</span>
+        <div style="font-family: 'Inter', system-ui, sans-serif; min-width: 250px; max-width: 300px; padding: 14px; color: #F5F7F5; background: #1D2B25;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 800; color: #8BE0B0; font-family: monospace;">${report.id}</span>
             <span style="
               font-size: 10px;
-              font-weight: 700;
+              font-weight: 800;
               padding: 2px 8px;
               border-radius: 999px;
-              background-color: ${report.priority === "critical" ? "#FEE2E2" : report.priority === "high" ? "#FFEDD5" : "#FEF3C7"};
-              color: ${report.priority === "critical" ? "#DC2626" : report.priority === "high" ? "#EA580C" : "#D97706"};
+              background-color: ${report.priority === "critical" ? "#7f1d1d" : report.priority === "high" ? "#7c2d12" : "#78350f"};
+              color: ${report.priority === "critical" ? "#fca5a5" : report.priority === "high" ? "#fdba74" : "#fcd34d"};
+              border: 1px solid ${report.priority === "critical" ? "#ef4444" : "#f97316"};
               text-transform: uppercase;
             ">
               ${report.priority}
             </span>
           </div>
 
-          <h4 style="font-size: 13px; font-weight: 700; margin: 0 0 6px 0; line-height: 1.3;">${report.title}</h4>
+          <h4 style="font-size: 13px; font-weight: 700; margin: 0 0 6px 0; line-height: 1.3; color: #F5F7F5;">${report.title}</h4>
 
-          <div style="display: flex; gap: 8px; font-size: 11px; color: #526056; margin-bottom: 8px;">
-            <div><strong>WQI:</strong> ${report.wqi?.total || 75}/100</div>
-            <div>•</div>
-            <div><strong>Status:</strong> ${report.status}</div>
+          <div style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid ${visualCat.color}; margin-bottom: 8px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${visualCat.color};"></span>
+            <span style="font-size: 11px; font-weight: 700; color: ${visualCat.mint};">${visualCat.badgeLabel}</span>
           </div>
 
-          <p style="font-size: 11px; color: #64748b; margin: 0 0 8px 0; line-height: 1.3;">
+          <div style="display: flex; gap: 8px; font-size: 11px; color: #A5B3AA; margin-bottom: 8px;">
+            <div><strong>WQI:</strong> <span style="color: #8BE0B0; font-weight: bold;">${report.wqi?.total || 75}</span>/100</div>
+            <div>•</div>
+            <div><strong>Status:</strong> <span style="color: #F5F7F5; text-transform: capitalize;">${report.status}</span></div>
+          </div>
+
+          <p style="font-size: 11px; color: #A5B3AA; margin: 0 0 8px 0; line-height: 1.3;">
             📍 ${report.location?.address || "City Location"}
           </p>
 
           ${report.imageUrl ? `
-            <img src="${report.imageUrl}" alt="${report.title}" style="width: 100%; height: 90px; object-fit: cover; border-radius: 6px; margin-bottom: 8px;" />
+            <img src="${report.imageUrl}" alt="${report.title}" style="width: 100%; height: 95px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; border: 1px solid #273b33;" />
           ` : ""}
 
           ${report.duplicateInfo?.corroborationCount > 1 ? `
-            <div style="font-size: 10px; color: #174C37; background: #e8f0eb; padding: 4px 6px; border-radius: 4px; margin-bottom: 8px; font-weight: 600;">
-              👥 Reported by ${report.duplicateInfo.corroborationCount} citizens
+            <div style="font-size: 10px; color: #8BE0B0; background: #142820; border: 1px solid #273b33; padding: 4px 8px; border-radius: 6px; margin-bottom: 8px; font-weight: 600;">
+              👥 Corroborated by ${report.duplicateInfo.corroborationCount} citizen reports
             </div>
           ` : ""}
 
-          <div style="font-size: 11px; font-weight: 600; color: #174C37;">
+          <div style="font-size: 11px; font-weight: 600; color: #8BE0B0;">
             Estimated: ${report.wqi?.estimatedVolumeM3 || 2.4} m³ (${report.category})
           </div>
         </div>
@@ -233,16 +260,15 @@ export default function WasteMap({
 
       markersLayerRef.current.addLayer(marker);
 
-      // If Heatmap layer is active, draw density circular buffers
+      // Density buffer in heatmap mode
       if (showHeatmap && report.status !== "resolved") {
         const radius = (report.wqi?.total || 50) * 4.5;
-        const color = report.priority === "critical" ? "#DC2626" : report.priority === "high" ? "#EA580C" : "#D97706";
         const circle = L.circle([report.location.lat, report.location.lng], {
           radius: radius,
-          fillColor: color,
-          fillOpacity: 0.28,
+          fillColor: visualCat.color,
+          fillOpacity: 0.25,
           stroke: true,
-          color: color,
+          color: visualCat.color,
           weight: 1.5,
           opacity: 0.6
         });
@@ -250,7 +276,7 @@ export default function WasteMap({
       }
     });
 
-    // 3. Add Vehicles if toggled on
+    // 3. Add Vehicles
     if (showVehicles && vehicles && vehicles.length > 0) {
       vehicles.forEach(vehicle => {
         if (!vehicle.location) return;
@@ -259,146 +285,130 @@ export default function WasteMap({
           icon: createVehicleIcon(vehicle)
         });
 
-        const vPopupContent = `
-          <div style="font-family: system-ui, sans-serif; min-width: 220px; padding: 10px; color: #202923;">
-            <div style="font-size: 11px; font-weight: 700; color: #174C37; text-transform: uppercase; margin-bottom: 4px;">
-              🚛 ${vehicle.id} • ${vehicle.type}
+        const vPopup = `
+          <div style="font-family: 'Inter', system-ui, sans-serif; min-width: 200px; padding: 12px; color: #F5F7F5; background: #1D2B25;">
+            <div style="font-size: 10px; font-weight: 800; color: #8BE0B0; text-transform: uppercase; margin-bottom: 2px;">Municipal Fleet</div>
+            <h4 style="font-size: 13px; font-weight: 700; margin: 0 0 4px 0; color: #F5F7F5;">${vehicle.name}</h4>
+            <div style="font-size: 11px; color: #A5B3AA; margin-bottom: 6px;">
+              Driver: <strong>${vehicle.driverName}</strong>
             </div>
-            <h4 style="font-size: 13px; font-weight: 700; margin: 0 0 6px 0;">${vehicle.name}</h4>
-            <div style="font-size: 11px; color: #526056; margin-bottom: 4px;">
-              <strong>Driver:</strong> ${vehicle.driverName} (${vehicle.driverPhone})
+            <div style="font-size: 11px; color: #A5B3AA;">
+              Status: <span style="color: ${vehicle.status === "available" ? "#16A36A" : "#3987F5"}; font-weight: bold; text-transform: uppercase;">${vehicle.status.replace("_", " ")}</span>
             </div>
-            <div style="font-size: 11px; color: #526056; margin-bottom: 4px;">
-              <strong>Capacity:</strong> ${vehicle.capacityKg - vehicle.currentLoadKg} kg free of ${vehicle.capacityKg} kg
-            </div>
-            <div style="font-size: 11px; color: #526056; margin-bottom: 6px;">
-              <strong>Status:</strong> <span style="font-weight: 600; text-transform: capitalize;">${vehicle.status.replace("_", " ")}</span>
-            </div>
-            <div style="font-size: 10px; color: #64748b;">
-              📍 ${vehicle.location.address}
+            <div style="font-size: 11px; color: #A5B3AA; margin-top: 4px;">
+              Load: ${vehicle.currentLoadKg} / ${vehicle.capacityKg} kg
             </div>
           </div>
         `;
-
-        vMarker.bindPopup(vPopupContent);
+        vMarker.bindPopup(vPopup);
         vehiclesLayerRef.current.addLayer(vMarker);
       });
     }
   }, [reports, vehicles, filterPriority, filterStatus, filterCategory, showVehicles, showHeatmap, searchQuery]);
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden border border-stone-200 shadow-sm bg-white">
-      {/* Top Filter Bar */}
+    <div className="relative rounded-2xl overflow-hidden border border-[#273b33] shadow-2xl bg-[#142820]">
+      {/* Dark Filter & Control Bar */}
       {showControls && (
-        <div className="p-3 bg-white/95 backdrop-blur-md border-b border-stone-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-          {/* Search box */}
-          <div className="relative flex-1 min-w-[200px]">
+        <div className="p-3.5 bg-[#142820]/95 backdrop-blur-md border-b border-[#273b33] flex flex-wrap items-center justify-between gap-3 text-xs">
+          {/* Search */}
+          <div className="flex-1 min-w-[200px] max-w-xs">
             <input
               type="text"
-              placeholder="Search reports by title, ward, or address..."
+              placeholder="Search ward or location..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#174C37] text-stone-800"
+              className="w-full px-3 py-1.5 rounded-xl bg-[#1D2B25] border border-[#273b33] text-[#F5F7F5] placeholder-[#A5B3AA]/60 text-xs focus:outline-none focus:border-[#16A36A]"
             />
-            <span className="absolute left-2.5 top-2 text-stone-400">🔍</span>
           </div>
 
-          {/* Quick Filters */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Priority Filter */}
-            <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              aria-label="Filter by Priority"
-              className="px-2.5 py-1.5 rounded-lg border border-stone-300 bg-stone-50 font-medium text-stone-700"
-            >
-              <option value="all">All Priorities</option>
-              <option value="critical">🔴 Critical</option>
-              <option value="high">🟠 High</option>
-              <option value="medium">🟡 Medium</option>
-              <option value="low">🟢 Low</option>
-            </select>
-
-            {/* Status Filter */}
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              aria-label="Filter by Status"
-              className="px-2.5 py-1.5 rounded-lg border border-stone-300 bg-stone-50 font-medium text-stone-700"
-            >
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="verified">Verified</option>
-              <option value="assigned">Assigned</option>
-              <option value="on_the_way">On the Way</option>
-              <option value="resolved">Resolved</option>
-            </select>
-
-            {/* Waste Category */}
+          {/* 3-Color Category Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-[#A5B3AA] font-semibold text-[11px] hidden sm:inline">Waste Type:</span>
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              aria-label="Filter by Waste Category"
-              className="px-2.5 py-1.5 rounded-lg border border-stone-300 bg-stone-50 font-medium text-stone-700"
+              aria-label="Filter waste category"
+              className="px-2.5 py-1.5 rounded-xl bg-[#1D2B25] border border-[#273b33] text-[#F5F7F5] text-xs font-medium focus:outline-none focus:border-[#16A36A]"
             >
-              <option value="all">All Waste Categories</option>
-              <option value="plastic">Plastic</option>
-              <option value="construction">Construction Debris</option>
-              <option value="organic">Organic</option>
-              <option value="mixed">Mixed Garbage</option>
-              <option value="household">Household</option>
+              <option value="all">All Waste Streams</option>
+              <option value="recyclable">🟢 Recyclable (Green)</option>
+              <option value="organic">🔵 Wet / Organic (Blue)</option>
+              <option value="mixed">🟡 Mixed / Other (Yellow)</option>
             </select>
+          </div>
 
-            {/* Toggle Vehicles */}
+          {/* Priority Filter */}
+          <div className="flex items-center gap-2">
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              aria-label="Filter waste priority"
+              className="px-2.5 py-1.5 rounded-xl bg-[#1D2B25] border border-[#273b33] text-[#F5F7F5] text-xs font-medium focus:outline-none focus:border-[#16A36A]"
+            >
+              <option value="all">All Priorities</option>
+              <option value="critical">Critical Urgency</option>
+              <option value="high">High Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="low">Low Priority</option>
+            </select>
+          </div>
+
+          {/* Toggle Layers */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setShowVehicles(!showVehicles)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                showVehicles ? "bg-[#174C37] text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+              className={`px-2.5 py-1.5 rounded-xl border font-bold text-[11px] transition flex items-center gap-1 ${
+                showVehicles
+                  ? "bg-[#1D2B25] border-[#16A36A] text-[#8BE0B0]"
+                  : "bg-[#1D2B25] border-[#273b33] text-[#A5B3AA]"
               }`}
             >
-              <Truck size={14} />
+              <Truck size={13} />
               <span>Fleet ({vehicles.length})</span>
             </button>
 
-            {/* Toggle Heatmap */}
             <button
               onClick={() => setShowHeatmap(!showHeatmap)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                showHeatmap ? "bg-amber-600 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+              className={`px-2.5 py-1.5 rounded-xl border font-bold text-[11px] transition flex items-center gap-1 ${
+                showHeatmap
+                  ? "bg-[#1D2B25] border-[#F4C542] text-[#F4C542]"
+                  : "bg-[#1D2B25] border-[#273b33] text-[#A5B3AA]"
               }`}
             >
-              <Layers size={14} />
+              <Layers size={13} />
               <span>Hotspot Density</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Map Container */}
-      <div ref={mapContainerRef} style={{ height }} className="w-full relative z-0" />
+      {/* Map Canvas */}
+      <div ref={mapContainerRef} style={{ height }} className="w-full relative z-10" />
 
-      {/* Map Legend Footer */}
-      <div className="px-4 py-2 bg-stone-50 border-t border-stone-200 flex flex-wrap items-center justify-between text-xs text-stone-600">
+      {/* 3-Color Map Legend Footer */}
+      <div className="px-4 py-2 bg-[#101A17] border-t border-[#273b33] flex flex-wrap items-center justify-between gap-3 text-[11px] text-[#A5B3AA]">
         <div className="flex items-center gap-4 flex-wrap">
-          <span className="font-semibold text-stone-700">Map Legend:</span>
+          <span className="font-bold text-[#F5F7F5] font-heading">Categorization System:</span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-red-600 inline-block shadow-sm"></span> Critical
+            <span className="w-2.5 h-2.5 rounded-full bg-[#16A36A]" />
+            <strong className="text-[#8BE0B0]">Green:</strong> Recyclable Waste
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-orange-500 inline-block shadow-sm"></span> High
+            <span className="w-2.5 h-2.5 rounded-full bg-[#3987F5]" />
+            <strong className="text-[#90c2ff]">Blue:</strong> Wet / Organic Waste
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-sm"></span> Medium
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-emerald-600 inline-block shadow-sm"></span> Low / Resolved
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-[#174C37] inline-block shadow-sm"></span> Municipal Vehicle
+            <span className="w-2.5 h-2.5 rounded-full bg-[#F4C542]" />
+            <strong className="text-[#fce58d]">Yellow:</strong> Mixed / Other Waste
           </span>
         </div>
-        <div className="text-stone-400">
-          Showing {reports.length} reports • Real-time Leaflet GIS
+
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span>Pulsing Pin: Critical Priority</span>
+          </span>
         </div>
       </div>
     </div>

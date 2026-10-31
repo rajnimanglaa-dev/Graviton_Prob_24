@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useApp } from "../../context/AppContext.jsx";
 import { Link } from "react-router-dom";
+import { getWasteVisualCategory } from "../../services/wasteCategoryTheme.js";
 import {
   FileText,
   PlusCircle,
@@ -36,40 +37,40 @@ export default function MyReportsPage() {
 
   const getPriorityBadgeClass = (priority) => {
     switch (priority) {
-      case "critical": return "bg-red-100 text-red-700 border-red-200";
-      case "high": return "bg-orange-100 text-orange-700 border-orange-200";
-      case "medium": return "bg-amber-100 text-amber-700 border-amber-200";
-      default: return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      case "critical": return "bg-red-500/20 text-red-300 border-red-500/50";
+      case "high": return "bg-orange-500/20 text-orange-300 border-orange-500/50";
+      case "medium": return "bg-amber-500/20 text-amber-300 border-amber-500/50";
+      default: return "bg-emerald-500/20 text-emerald-300 border-emerald-500/50";
     }
   };
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
-      case "resolved": return "bg-emerald-100 text-emerald-800";
-      case "collected": return "bg-teal-100 text-teal-800";
-      case "on_the_way": return "bg-blue-100 text-blue-800";
-      case "assigned": return "bg-indigo-100 text-indigo-800";
-      case "verified": return "bg-purple-100 text-purple-800";
-      default: return "bg-amber-100 text-amber-800";
+      case "resolved": return "bg-[#16A36A]/20 text-[#8BE0B0] border border-[#16A36A]/40";
+      case "collected": return "bg-teal-500/20 text-teal-300 border border-teal-500/40";
+      case "on_the_way": return "bg-[#3987F5]/20 text-[#90c2ff] border border-[#3987F5]/40";
+      case "assigned": return "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40";
+      case "verified": return "bg-purple-500/20 text-purple-300 border border-purple-500/40";
+      default: return "bg-amber-500/20 text-amber-300 border border-amber-500/40";
     }
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn text-[#F5F7F5]">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#202923] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#F5F7F5] tracking-tight font-heading">
             My Garbage Complaints
           </h1>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#A5B3AA] mt-0.5">
             Track status, vehicle assignments, and verified before/after photographic proof.
           </p>
         </div>
 
         <Link
           to="/citizen/report"
-          className="px-4 py-2.5 rounded-xl bg-[#174C37] text-white hover:bg-[#0f3325] text-xs font-bold shadow-sm transition flex items-center gap-2 self-start sm:self-auto"
+          className="px-4 py-2.5 rounded-xl bg-[#16A36A] text-white hover:bg-[#0f7a4e] text-xs font-bold shadow-md shadow-[#16A36A]/30 transition flex items-center gap-2 self-start sm:self-auto"
         >
           <PlusCircle size={15} />
           <span>New Report</span>
@@ -77,27 +78,27 @@ export default function MyReportsPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-4 bg-white rounded-2xl border border-stone-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <div className="p-4 bg-[#1D2B25] rounded-3xl border border-[#273b33] shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <div className="relative w-full sm:w-80">
           <input
             type="text"
             placeholder="Search by ticket ID, landmark, or title..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#174C37] text-stone-800"
+            className="w-full pl-8 pr-3 py-2 rounded-xl bg-[#142820] border border-[#273b33] text-[#F5F7F5] placeholder-[#A5B3AA]/60 focus:outline-none focus:border-[#16A36A]"
           />
-          <Search size={14} className="absolute left-2.5 top-3 text-stone-400" />
+          <Search size={14} className="absolute left-2.5 top-3 text-[#A5B3AA]" />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {["all", "pending", "assigned", "on_the_way", "collected", "resolved"].map(st => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-lg font-bold capitalize whitespace-nowrap transition ${
+              className={`px-3 py-1.5 rounded-xl font-bold capitalize whitespace-nowrap transition ${
                 statusFilter === st
-                  ? "bg-[#174C37] text-white shadow-xs"
-                  : "bg-stone-50 text-stone-600 hover:bg-stone-100"
+                  ? "bg-[#16A36A] text-white shadow-sm"
+                  : "bg-[#142820] text-[#A5B3AA] hover:text-white border border-[#273b33]"
               }`}
             >
               {st.replace("_", " ")}
@@ -106,110 +107,85 @@ export default function MyReportsPage() {
         </div>
       </div>
 
-      {/* Reports Table / Card Grid */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-xs overflow-hidden">
+      {/* Complaints List */}
+      <div className="bg-[#1D2B25] rounded-3xl border border-[#273b33] shadow-md overflow-hidden">
         {filtered.length === 0 ? (
           <div className="p-12 text-center space-y-3">
-            <FileText size={36} className="mx-auto text-stone-300" />
-            <h4 className="text-sm font-bold text-stone-700">No reports found matching filters</h4>
-            <p className="text-xs text-stone-400">Try adjusting your search criteria or submit a new grievance.</p>
+            <FileText size={36} className="mx-auto text-[#A5B3AA]/50" />
+            <p className="text-xs text-[#A5B3AA]">No reports matched the selected filter.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-stone-50/80 border-b border-stone-200 text-stone-500 font-bold uppercase tracking-wider text-[11px]">
-                  <th className="py-3 px-4">Incident</th>
-                  <th className="py-3 px-4">Waste Class</th>
-                  <th className="py-3 px-4">Location</th>
-                  <th className="py-3 px-4">WQI / Priority</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Assigned Unit</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {filtered.map(report => (
-                  <tr
-                    key={report.id}
-                    className="hover:bg-stone-50/70 transition cursor-pointer"
-                    onClick={() => setSelectedReport(report)}
-                  >
-                    {/* Incident ID & Photo */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={report.imageUrl}
-                          alt={report.title}
-                          className="w-10 h-10 rounded-lg object-cover border border-stone-200 shrink-0"
-                        />
-                        <div>
-                          <div className="font-mono font-bold text-[#174C37]">{report.id}</div>
-                          <div className="text-[10px] text-stone-400">
-                            {new Date(report.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
+          <div className="divide-y divide-[#273b33]">
+            {filtered.map(report => {
+              const visual = getWasteVisualCategory(report.category);
+              return (
+                <div
+                  key={report.id}
+                  className="p-5 hover:bg-[#24362f] transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                >
+                  <div className="flex items-start gap-4 min-w-0">
+                    <img
+                      src={report.imageUrl}
+                      alt={report.title}
+                      className="w-16 h-16 rounded-2xl object-cover border border-[#273b33] shrink-0"
+                    />
 
-                    {/* Waste Class */}
-                    <td className="py-3.5 px-4 font-semibold capitalize text-stone-800">
-                      {report.category}
-                    </td>
-
-                    {/* Location */}
-                    <td className="py-3.5 px-4 max-w-[200px]">
-                      <div className="text-stone-800 truncate font-medium">{report.location.address}</div>
-                      <div className="text-[10px] text-stone-400">{report.location.ward}</div>
-                    </td>
-
-                    {/* WQI & Priority */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getPriorityBadgeClass(report.priority)}`}>
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-mono font-bold text-[#8BE0B0]">{report.id}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getPriorityBadgeClass(report.priority)}`}>
                           {report.priority.toUpperCase()}
                         </span>
-                        <span className="text-[11px] font-bold text-stone-700">
-                          {report.wqi?.total || 75}/100
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                          style={{ backgroundColor: `${visual.color}20`, borderColor: visual.color, color: visual.mint }}
+                        >
+                          {visual.badgeLabel}
+                        </span>
+                        <span className="text-[11px] text-[#A5B3AA] font-mono">
+                          {new Date(report.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                    </td>
 
-                    {/* Status */}
-                    <td className="py-3.5 px-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold capitalize ${getStatusBadgeClass(report.status)}`}>
-                        {report.status.replace("_", " ")}
-                      </span>
-                    </td>
+                      <h3 className="text-sm font-bold text-[#F5F7F5] truncate">{report.title}</h3>
+                      <p className="text-xs text-[#A5B3AA] truncate">📍 {report.location.address}</p>
 
-                    {/* Assigned Vehicle */}
-                    <td className="py-3.5 px-4">
-                      {report.assignedVehicleId ? (
-                        <div className="flex items-center gap-1.5 text-stone-700">
-                          <Truck size={13} className="text-[#174C37]" />
-                          <span className="font-semibold">{report.assignedDriverName || report.assignedVehicleId}</span>
-                        </div>
-                      ) : (
-                        <span className="text-stone-400 italic">Unassigned</span>
-                      )}
-                    </td>
+                      <div className="flex items-center gap-4 text-xs pt-1">
+                        <span className="text-[#A5B3AA]">
+                          WQI Score: <strong className="text-[#8BE0B0] font-stat">{report.wqi?.total || 75}/100</strong>
+                        </span>
+                        <span className="text-[#A5B3AA]">
+                          Vehicle: <strong className="text-[#F5F7F5]">{report.assignedVehicleId || "Pending Dispatch"}</strong>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-                    {/* Action */}
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedReport(report);
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-[#174C37] hover:text-white transition font-bold text-[11px] text-stone-700"
-                      >
-                        Inspect
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+                    <span className={`text-xs font-bold px-3 py-1 rounded-full capitalize ${getStatusBadgeClass(report.status)}`}>
+                      {report.status.replace("_", " ")}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedReport(report)}
+                      className="p-2 rounded-xl bg-[#142820] border border-[#273b33] hover:border-[#16A36A] text-[#8BE0B0] hover:text-white transition"
+                      title="Inspect full complaint details"
+                    >
+                      <Eye size={16} />
+                    </button>
+
+                    <Link
+                      to={`/citizen/track?id=${report.id}`}
+                      className="p-2 rounded-xl bg-[#16A36A] text-white hover:bg-[#0f7a4e] transition"
+                      title="Track collection progress timeline"
+                    >
+                      <Clock size={16} />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

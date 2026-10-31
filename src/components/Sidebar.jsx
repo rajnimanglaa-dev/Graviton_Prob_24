@@ -2,7 +2,6 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
 import {
-  Recycle,
   LayoutDashboard,
   PlusCircle,
   Cpu,
@@ -23,6 +22,7 @@ import {
   Globe,
   X
 } from "lucide-react";
+import Logo from "./UI/Logo.jsx";
 
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
@@ -76,35 +76,25 @@ export default function Sidebar({ isOpen, onClose }) {
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 lg:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
         />
       )}
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-stone-200 flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#142820]/95 backdrop-blur-md border-r border-[#273b33] flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Brand Header */}
-        <div className="h-16 px-5 border-b border-stone-200 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#174C37] text-white flex items-center justify-center shadow-xs">
-              <Recycle size={20} className="text-emerald-300" />
-            </div>
-            <div>
-              <span className="font-extrabold text-lg text-[#174C37] tracking-tight">
-                Smart<span className="text-[#76A96B]">Waste</span>
-              </span>
-              <span className="text-[10px] text-stone-500 block font-semibold uppercase -mt-0.5">
-                {role} Portal
-              </span>
-            </div>
+        <div className="h-16 px-4 border-b border-[#273b33] flex items-center justify-between">
+          <Link to="/" className="flex items-center">
+            <Logo size="sm" showTagline={false} />
           </Link>
           <button
             onClick={onClose}
             aria-label="Close sidebar"
-            className="lg:hidden p-1.5 rounded-lg text-stone-500 hover:bg-stone-100"
+            className="lg:hidden p-1.5 rounded-lg text-[#A5B3AA] hover:bg-[#1D2B25] hover:text-white"
           >
             <X size={18} />
           </button>
@@ -123,12 +113,12 @@ export default function Sidebar({ isOpen, onClose }) {
                 onClick={onClose}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
                   isActive
-                    ? "bg-[#174C37] text-white shadow-xs"
-                    : "text-stone-600 hover:text-[#174C37] hover:bg-stone-100/80"
+                    ? "bg-[#16A36A] text-white shadow-md shadow-[#16A36A]/30"
+                    : "text-[#A5B3AA] hover:text-[#F5F7F5] hover:bg-[#1D2B25]"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon size={18} className={isActive ? "text-white" : "text-stone-400"} />
+                  <Icon size={18} className={isActive ? "text-white" : "text-[#8BE0B0] opacity-70"} />
                   <span>{item.label}</span>
                 </div>
 
@@ -136,7 +126,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   {item.badge && (
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold text-white ${
-                        item.badgeColor || "bg-emerald-600"
+                        item.badgeColor || "bg-[#16A36A]"
                       }`}
                     >
                       {item.badge}
@@ -145,7 +135,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   {item.count !== undefined && item.count !== null && (
                     <span
                       className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        isActive ? "bg-white/20 text-white" : "bg-stone-100 text-stone-500"
+                        isActive ? "bg-white/20 text-white" : "bg-[#1D2B25] text-[#8BE0B0]"
                       }`}
                     >
                       {item.count}
@@ -158,25 +148,25 @@ export default function Sidebar({ isOpen, onClose }) {
         </nav>
 
         {/* Footer info in sidebar */}
-        <div className="p-4 border-t border-stone-200 bg-stone-50/60 space-y-2">
+        <div className="p-4 border-t border-[#273b33] bg-[#0F1D17] space-y-2">
           {role === "citizen" && (
-            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs">
+            <div className="p-3 bg-[#1D2B25] rounded-xl border border-[#273b33] text-xs">
               <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-[#174C37]">EcoPoints Balance</span>
-                <span className="font-extrabold text-emerald-800">🌟 {currentUser.points || 420}</span>
+                <span className="font-bold text-[#8BE0B0]">EcoPoints Balance</span>
+                <span className="font-extrabold text-[#F5F7F5] font-stat">🌟 {currentUser.points || 420}</span>
               </div>
-              <p className="text-[10px] text-emerald-700">Rank #1 in Ward 7 Civil Lines</p>
+              <p className="text-[10px] text-[#A5B3AA]">Rank #1 in Ward 7 Civil Lines</p>
             </div>
           )}
 
-          <div className="flex items-center justify-between text-xs text-stone-500 pt-1">
-            <Link to="/" className="hover:text-[#174C37] flex items-center gap-1">
+          <div className="flex items-center justify-between text-xs text-[#A5B3AA] pt-1">
+            <Link to="/" className="hover:text-[#8BE0B0] flex items-center gap-1">
               <Globe size={13} />
-              <span>Website</span>
+              <span>Public Website</span>
             </Link>
             <button
               onClick={resetToDemoData}
-              className="hover:text-stone-900 flex items-center gap-1 text-[11px]"
+              className="hover:text-white flex items-center gap-1 text-[11px]"
               title="Reset initial demo data"
             >
               <RotateCcw size={12} />

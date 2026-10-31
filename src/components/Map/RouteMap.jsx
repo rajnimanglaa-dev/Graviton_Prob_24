@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { getWasteVisualCategory } from "../../services/wasteCategoryTheme.js";
 
 // Depot marker icon
 function createDepotIcon() {
@@ -8,62 +9,66 @@ function createDepotIcon() {
     className: "depot-marker",
     html: `
       <div style="
-        background: #1e3a8a;
-        color: white;
-        border: 2px solid white;
-        border-radius: 8px;
-        width: 34px;
-        height: 34px;
+        background: #1D2B25;
+        color: #8BE0B0;
+        border: 2px solid #16A36A;
+        border-radius: 10px;
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: bold;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+        font-size: 16px;
       ">
         🏢
       </div>
     `,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17]
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
   });
 }
 
-// Landfill marker icon
+// Landfill / Recycling Facility marker icon
 function createLandfillIcon() {
   return L.divIcon({
     className: "landfill-marker",
     html: `
       <div style="
-        background: #174C37;
-        color: white;
-        border: 2px solid white;
-        border-radius: 8px;
-        width: 34px;
-        height: 34px;
+        background: #142820;
+        color: #8BE0B0;
+        border: 2px solid #8BE0B0;
+        border-radius: 10px;
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: bold;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+        font-size: 16px;
       ">
         ♻️
       </div>
     `,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17]
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
   });
 }
 
-// Stop sequence marker icon (Numbered #1, #2, ...)
-function createStopIcon(sequenceNumber, priority) {
-  const bg = priority === "critical" ? "#DC2626" : priority === "high" ? "#EA580C" : "#D97706";
+// Stop sequence marker icon (Numbered #1, #2, ...) using 3-color categorization
+function createStopIcon(sequenceNumber, stop) {
+  const visual = getWasteVisualCategory(stop.category);
+  const color = visual.color;
+
   return L.divIcon({
     className: "stop-marker",
     html: `
       <div style="
-        background: ${bg};
+        background: ${color};
         color: white;
-        border: 2px solid white;
+        border: 2px solid #F5F7F5;
         border-radius: 50%;
         width: 32px;
         height: 32px;
@@ -72,7 +77,8 @@ function createStopIcon(sequenceNumber, priority) {
         justify-content: center;
         font-weight: 800;
         font-size: 13px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+        font-family: sans-serif;
       ">
         ${sequenceNumber}
       </div>
@@ -96,8 +102,10 @@ export default function RouteMap({ routeData, height = "480px" }) {
       zoom: 13
     });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "Map data (c) OpenStreetMap contributors | SmartWaste Route Planner",
+    // CartoDB Dark Matter tiles
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
+      subdomains: "abcd",
       maxZoom: 19
     }).addTo(map);
 
@@ -121,20 +129,30 @@ export default function RouteMap({ routeData, height = "480px" }) {
     // 1. Add Depot marker
     if (depot) {
       const depotMarker = L.marker([depot.lat, depot.lng], { icon: createDepotIcon() })
-        .bindPopup(`<strong>Start:</strong> ${depot.name}<br/><span style="font-size:11px; color:#666;">${depot.address}</span>`);
+        .bindPopup(`
+          <div style="font-family: 'Inter', sans-serif; padding: 10px; background: #1D2B25; color: #F5F7F5; border-radius: 8px;">
+            <strong style="color: #8BE0B0;">Start Depot:</strong> ${depot.name}<br/>
+            <span style="font-size:11px; color:#A5B3AA;">${depot.address}</span>
+          </div>
+        `);
       routeLayerRef.current.addLayer(depotMarker);
     }
 
     // 2. Add Stop markers
     orderedStops.forEach((stop, index) => {
+      const visual = getWasteVisualCategory(stop.category);
       const stopMarker = L.marker([stop.location.lat, stop.location.lng], {
-        icon: createStopIcon(index + 1, stop.priority)
+        icon: createStopIcon(index + 1, stop)
       }).bindPopup(`
-        <div style="font-family: system-ui; min-width: 180px; padding: 4px;">
-          <div style="font-weight: 700; color: #174C37;">Stop #${index + 1}: ${stop.id}</div>
-          <div style="font-size: 12px; margin: 4px 0;"><strong>Address:</strong> ${stop.location.address}</div>
-          <div style="font-size: 11px; color: #666;">Category: ${stop.category} (${stop.wqi?.estimatedVolumeM3 || 2} m³)</div>
-          <div style="font-size: 11px; color: #666;">Priority: <span style="font-weight:bold; text-transform:uppercase;">${stop.priority}</span></div>
+        <div style="font-family: 'Inter', sans-serif; min-width: 200px; padding: 10px; background: #1D2B25; color: #F5F7F5; border-radius: 8px;">
+          <div style="font-weight: 800; color: #8BE0B0; font-family: monospace;">Stop #${index + 1}: ${stop.id}</div>
+          <div style="font-size: 12px; margin: 4px 0; color: #F5F7F5;">${stop.location.address}</div>
+          <div style="font-size: 11px; color: ${visual.mint}; font-weight: bold; margin-bottom: 2px;">
+            ● ${visual.name} (${stop.wqi?.estimatedVolumeM3 || 2} m³)
+          </div>
+          <div style="font-size: 11px; color: #A5B3AA;">
+            Priority: <span style="font-weight:bold; color: #F5F7F5; text-transform:uppercase;">${stop.priority}</span>
+          </div>
         </div>
       `);
       routeLayerRef.current.addLayer(stopMarker);
@@ -143,22 +161,36 @@ export default function RouteMap({ routeData, height = "480px" }) {
     // 3. Add Landfill marker
     if (landfill) {
       const landfillMarker = L.marker([landfill.lat, landfill.lng], { icon: createLandfillIcon() })
-        .bindPopup(`<strong>Final Destination:</strong> ${landfill.name}<br/><span style="font-size:11px; color:#666;">${landfill.address}</span>`);
+        .bindPopup(`
+          <div style="font-family: 'Inter', sans-serif; padding: 10px; background: #1D2B25; color: #F5F7F5; border-radius: 8px;">
+            <strong style="color: #8BE0B0;">Destination:</strong> ${landfill.name}<br/>
+            <span style="font-size:11px; color:#A5B3AA;">${landfill.address}</span>
+          </div>
+        `);
       routeLayerRef.current.addLayer(landfillMarker);
     }
 
     // 4. Draw route Polyline
     if (polylinePoints && polylinePoints.length > 1) {
+      // Glow underlay line
+      const glowLine = L.polyline(polylinePoints, {
+        color: "#16A36A",
+        weight: 8,
+        opacity: 0.35,
+        lineJoin: "round"
+      });
+      routeLayerRef.current.addLayer(glowLine);
+
+      // Core line
       const polyline = L.polyline(polylinePoints, {
-        color: "#174C37",
-        weight: 5,
-        opacity: 0.85,
-        dashArray: "1, 10",
+        color: "#8BE0B0",
+        weight: 4,
+        opacity: 0.95,
+        dashArray: "4, 8",
         lineJoin: "round"
       });
       routeLayerRef.current.addLayer(polyline);
 
-      // Fit bounds
       try {
         map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
       } catch (e) {
@@ -168,15 +200,15 @@ export default function RouteMap({ routeData, height = "480px" }) {
   }, [routeData]);
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden border border-stone-200 shadow-sm bg-white">
+    <div className="relative w-full rounded-2xl overflow-hidden border border-[#273b33] shadow-2xl bg-[#142820]">
       <div ref={mapContainerRef} style={{ height }} className="w-full relative z-0" />
-      <div className="p-3 bg-stone-50 border-t border-stone-200 flex flex-wrap items-center justify-between text-xs text-stone-600">
+      <div className="p-3 bg-[#101A17] border-t border-[#273b33] flex flex-wrap items-center justify-between text-xs text-[#A5B3AA]">
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 font-medium">🏢 Depot Start</span>
-          <span className="flex items-center gap-1.5 font-medium">🔴 Assigned Stops</span>
-          <span className="flex items-center gap-1.5 font-medium">♻️ Eco-Processing End</span>
+          <span className="flex items-center gap-1.5 font-medium text-[#F5F7F5]">🏢 Depot Start</span>
+          <span className="flex items-center gap-1.5 font-medium text-[#8BE0B0]">🟢 Assigned Stops</span>
+          <span className="flex items-center gap-1.5 font-medium text-[#F5F7F5]">♻️ Eco-Processing End</span>
         </div>
-        <div className="text-stone-400">
+        <div className="text-[#8BE0B0] font-mono text-[11px]">
           Intelligent Heuristic Multi-Stop TSP Routing
         </div>
       </div>

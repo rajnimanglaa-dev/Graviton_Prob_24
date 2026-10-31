@@ -2,61 +2,174 @@
 @import "leaflet/dist/leaflet.css";
 
 @theme {
-  --color-forest: #174C37;
-  --color-forest-dark: #0f3325;
-  --color-forest-light: #23674c;
-  --color-forest-subtle: #e8f0eb;
-  --color-fresh: #76A96B;
-  --color-fresh-light: #94c489;
-  --color-fresh-dark: #5b8751;
-  --color-fresh-subtle: #f0f7ee;
-  --color-bg-warm: #F7F8F3;
-  --color-charcoal: #202923;
-  --color-charcoal-muted: #526056;
-  --color-charcoal-subtle: #89978d;
-  --color-amber-pri: #D97706;
+  --color-bg-main: #101A17;
+  --color-bg-secondary: #142820;
+  --color-bg-card: #1D2B25;
+  --color-bg-card-hover: #24362f;
+  --color-primary-green: #16A36A;
+  --color-primary-green-dark: #0f7a4e;
+  --color-mint: #8BE0B0;
+  --color-waste-blue: #3987F5;
+  --color-waste-yellow: #F4C542;
+  --color-waste-green: #16A36A;
+  --color-text-main: #F5F7F5;
+  --color-text-muted: #A5B3AA;
+  --color-border-card: #273b33;
+  --color-border-subtle: #1e332a;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #F7F8F3;
-  color: #202923;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #101A17;
+  color: #F5F7F5;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbars */
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: "Sora", "Space Grotesk", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.font-num, .font-stat {
+  font-family: "Manrope", monospace, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom scrollbars for dark environmental UI */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f3ee;
+  background: #101A17;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c3cec5;
-  border-radius: 3px;
+  background: #273b33;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ab0a0;
+  background: #16A36A;
 }
 
-/* Leaflet map styles */
+/* Leaflet dark theme map overrides */
 .leaflet-container {
   width: 100%;
   height: 100%;
+  background: #101A17 !important;
   z-index: 10;
 }
 
 .leaflet-popup-content-wrapper {
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
-  padding: 0;
-  overflow: hidden;
+  background: #1D2B25 !important;
+  color: #F5F7F5 !important;
+  border: 1px solid #273b33 !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.7) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.leaflet-popup-tip {
+  background: #1D2B25 !important;
+  border: 1px solid #273b33 !important;
 }
 
 .leaflet-popup-content {
-  margin: 0;
-  line-height: 1.4;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Custom Glow Effects */
+.glow-green {
+  box-shadow: 0 0 25px -4px rgba(22, 163, 106, 0.45);
+}
+
+.glow-mint {
+  box-shadow: 0 0 25px -4px rgba(139, 224, 176, 0.35);
+}
+
+.glow-blue {
+  box-shadow: 0 0 25px -4px rgba(57, 135, 245, 0.4);
+}
+
+.glow-yellow {
+  box-shadow: 0 0 25px -4px rgba(244, 197, 66, 0.4);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes laserScan {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 96%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.8;
+  }
+}
+
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-laser {
+  animation: laserScan 2.4s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: gentleFloat 4s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: gentlePulse 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spinSlow 12s linear infinite;
 }
