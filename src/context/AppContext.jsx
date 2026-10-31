@@ -480,7 +480,7 @@ export function AppProvider({ children }) {
     setSettings(DEFAULT_SETTINGS);
     setEvents(CLEANUP_EVENTS);
     setHotspotActions({});
-    localStorage.clear();
+    Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
     addNotification("Demo Data Reset", "System successfully restored to initial demo state.", "all");
   };
 

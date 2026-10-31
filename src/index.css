@@ -23,19 +23,66 @@ body {
   padding: 0;
   background-color: #101A17;
   color: #F5F7F5;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, h5, h6, .font-heading {
-  font-family: "Sora", "Space Grotesk", sans-serif;
-  letter-spacing: -0.02em;
+  font-family: "DM Sans", system-ui, sans-serif;
+  letter-spacing: -0.035em;
+  font-weight: 700;
 }
 
 .font-num, .font-stat {
   font-family: "Manrope", monospace, sans-serif;
   font-variant-numeric: tabular-nums;
 }
+
+/* Light theme overrides the shared palette used by the existing page components. */
+html[data-theme="light"] {
+  color-scheme: light;
+  --page-bg: #F4F7F4;
+  --surface-soft: #E8F0EB;
+  --surface-card: #FFFFFF;
+  --surface-hover: #DEE9E2;
+  --surface-deep: #E1EBE4;
+  --ink-strong: #1C2B23;
+  --ink-muted: #52645A;
+  --ink-accent: #16764B;
+  --line-soft: #D1DED5;
+}
+
+html[data-theme="light"] body { background-color: var(--page-bg); color: var(--ink-strong); }
+html[data-theme="light"] ::-webkit-scrollbar-track { background: var(--page-bg); }
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #B8C9BE; }
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #168653; }
+
+html[data-theme="light"] [class~="bg-[#101A17]"], html[data-theme="light"] [class^="bg-[#101A17]/"], html[data-theme="light"] [class*=" bg-[#101A17]/"] { background-color: var(--page-bg) !important; }
+html[data-theme="light"] [class~="bg-[#142820]"], html[data-theme="light"] [class^="bg-[#142820]/"], html[data-theme="light"] [class*=" bg-[#142820]/"] { background-color: var(--surface-soft) !important; }
+html[data-theme="light"] [class~="bg-[#1D2B25]"], html[data-theme="light"] [class^="bg-[#1D2B25]/"], html[data-theme="light"] [class*=" bg-[#1D2B25]/"] { background-color: var(--surface-card) !important; }
+html[data-theme="light"] [class~="bg-[#24362f]"] { background-color: var(--surface-hover) !important; }
+html[data-theme="light"] [class~="bg-[#0A120F]"], html[data-theme="light"] [class~="bg-[#0F1D17]"], html[data-theme="light"] [class~="bg-[#16372A]"] { background-color: var(--surface-deep) !important; }
+html[data-theme="light"] [class~="bg-[#24382F]"], html[data-theme="light"] [class~="bg-[#273b33]"] { background-color: var(--surface-hover) !important; }
+html[data-theme="light"] [class~="text-[#F5F7F5]"] { color: var(--ink-strong) !important; }
+html[data-theme="light"] [class~="text-[#A5B3AA]"], html[data-theme="light"] [class^="text-[#A5B3AA]/"], html[data-theme="light"] [class*=" text-[#A5B3AA]/"] { color: var(--ink-muted) !important; }
+html[data-theme="light"] [class~="text-[#8BE0B0]"] { color: var(--ink-accent) !important; }
+html[data-theme="light"] [class~="text-[#B8C6BD]"], html[data-theme="light"] [class~="text-[#DCE5DF]"] { color: var(--ink-muted) !important; }
+html[data-theme="light"] [class~="text-[#90c2ff]"] { color: #1757A6 !important; }
+html[data-theme="light"] [class~="text-[#fce58d]"] { color: #795600 !important; }
+html[data-theme="light"] [class~="text-[#FF6B6B]"] { color: #A82C2C !important; }
+html[data-theme="light"] [class~="border-[#273b33]"], html[data-theme="light"] [class~="border-[#1e332a]"], html[data-theme="light"] [class~="border-[#1D2B25]"], html[data-theme="light"] [class~="border-[#24382F]"], html[data-theme="light"] [class~="border-[#354a40]"] { border-color: var(--line-soft) !important; }
+html[data-theme="light"] [class~="divide-[#273b33]"] > :not(:last-child) { border-color: var(--line-soft) !important; }
+html[data-theme="light"] [class~="from-[#142820]"], html[data-theme="light"] [class~="from-[#1D2B25]"] { background-image: none !important; background-color: var(--surface-soft) !important; }
+html[data-theme="light"] [class~="bg-[#142820]"][class~="text-white"], html[data-theme="light"] [class~="bg-[#1D2B25]"][class~="text-white"], html[data-theme="light"] [class~="from-[#142820]"][class~="text-white"], html[data-theme="light"] [class~="from-[#1D2B25]"][class~="text-white"] { color: var(--ink-strong) !important; }
+html[data-theme="light"] [class~="bg-[#142820]"] [class~="text-white"]:not([class~="bg-[#16A36A]"]), html[data-theme="light"] [class~="bg-[#1D2B25]"] [class~="text-white"]:not([class~="bg-[#16A36A]"]) { color: var(--ink-strong) !important; }
+html[data-theme="light"] [class~="text-red-300"] { color: #A82C2C !important; }
+html[data-theme="light"] [class~="text-amber-200"], html[data-theme="light"] [class~="text-yellow-200"] { color: #795600 !important; }
+html[data-theme="light"] [class~="text-blue-300"] { color: #1757A6 !important; }
+html[data-theme="light"] .leaflet-container { background: #E7EEE9 !important; }
+html[data-theme="light"] .leaflet-popup-content-wrapper,
+html[data-theme="light"] .leaflet-popup-tip { background: #FFFFFF !important; color: var(--ink-strong) !important; border-color: var(--line-soft) !important; }
+
+html[data-theme="light"] [class*="bg-black/70"] { background-color: rgb(20 35 27 / 35%) !important; }
 
 /* Custom scrollbars for dark environmental UI */
 ::-webkit-scrollbar {
@@ -193,3 +240,19 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .animate-spin-slow {
   animation: spinSlow 12s linear infinite;
 }
+
+/* Keep the animated backdrop in the same soft palette as light surfaces. */
+html[data-theme="light"] .video-background-video {
+  filter: saturate(0.72) brightness(1.18) contrast(0.92) !important;
+  opacity: 0.2 !important;
+}
+html[data-theme="light"] .video-background-wash {
+  background: linear-gradient(180deg, rgb(244 247 244 / 34%), rgb(244 247 244 / 23%) 52%, rgb(244 247 244 / 48%)) !important;
+}
+html[data-theme="light"] .video-background-tint {
+  background: linear-gradient(35deg, rgb(220 240 226 / 24%), transparent 52%, rgb(184 224 196 / 20%)) !important;
+}
+html[data-theme="light"] .video-background-vignette {
+  background: radial-gradient(circle at center, transparent 62%, rgb(244 247 244 / 28%) 100%) !important;
+}
+html[data-theme="light"] .video-background canvas { opacity: 0.58 !important; }

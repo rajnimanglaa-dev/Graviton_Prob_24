@@ -124,7 +124,7 @@ export default function VideoBackground({ showControls = false, opacity = "opaci
         playsInline
         poster={currentScene.poster}
         onLoadedData={() => setIsVideoLoaded(true)}
-        className={`w-full h-full object-cover transition-opacity duration-1000 ${opacity} ${
+        className={`video-background-video w-full h-full object-cover transition-opacity duration-1000 ${opacity} ${
           isVideoLoaded ? "filter saturate-[1.4] contrast-[1.15] brightness-[1.18]" : "opacity-30"
         }`}
         style={{ transform: "scale(1.04)" }}
@@ -148,13 +148,13 @@ export default function VideoBackground({ showControls = false, opacity = "opaci
 
       {/* 4. Film Grading & Dark Green Environmental Masks */}
       {/* Deep environmental dark background overlay ensuring high contrast readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#101A17]/60 via-[#101A17]/48 to-[#101A17]/66" />
+      <div className="video-background-wash absolute inset-0 bg-gradient-to-b from-[#101A17]/60 via-[#101A17]/48 to-[#101A17]/66" />
 
       {/* Ambient Forest Green cinematic tint */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-[#142820]/35 via-transparent to-[#16A36A]/25" />
+      <div className="video-background-tint absolute inset-0 bg-gradient-to-tr from-[#142820]/35 via-transparent to-[#16A36A]/25" />
 
       {/* Radial perimeter vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_58%,rgba(16,26,23,0.48)_100%)]" />
+      <div className="video-background-vignette absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_58%,rgba(16,26,23,0.48)_100%)]" />
       <div className="absolute -top-40 -left-32 w-[34rem] h-[34rem] rounded-full bg-[#16A36A]/10 blur-[110px] animate-ambient-drift" />
       <div className="absolute -bottom-56 right-[-8rem] w-[38rem] h-[38rem] rounded-full bg-[#3987F5]/[0.07] blur-[130px] animate-ambient-drift-reverse" />
 

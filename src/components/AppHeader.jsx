@@ -11,6 +11,7 @@ import {
   User,
   RotateCcw
 } from "lucide-react";
+import ThemeToggle from "./UI/ThemeToggle.jsx";
 
 export default function AppHeader({ onToggleSidebar }) {
   const {
@@ -58,6 +59,7 @@ export default function AppHeader({ onToggleSidebar }) {
 
       {/* Right side: Quick Switcher + Notifications + Profile */}
       <div className="flex items-center gap-2.5">
+        <ThemeToggle compact />
         {/* Quick Role Switcher Pills */}
         <div className="hidden md:flex items-center bg-[#101A17] p-1 rounded-xl text-xs border border-[#273b33]">
           <button
