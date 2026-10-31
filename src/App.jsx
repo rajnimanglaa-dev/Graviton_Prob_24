@@ -1,122 +1,100 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AppProvider } from "./context/AppContext.jsx";
 
-function App() {
-  const [count, setCount] = useState(0)
+// Layouts
+import PublicLayout from "./layouts/PublicLayout.jsx";
+import DashboardLayout from "./layouts/DashboardLayout.jsx";
 
+// Public Pages
+import HomePage from "./pages/public/HomePage.jsx";
+import AboutPage from "./pages/public/AboutPage.jsx";
+import HowItWorksPage from "./pages/public/HowItWorksPage.jsx";
+import LiveMapPage from "./pages/public/LiveMapPage.jsx";
+import LoginPage from "./pages/public/LoginPage.jsx";
+
+// Citizen Pages
+import CitizenDashboard from "./pages/citizen/CitizenDashboard.jsx";
+import ReportWastePage from "./pages/citizen/ReportWastePage.jsx";
+import AIAnalysisPage from "./pages/citizen/AIAnalysisPage.jsx";
+import MyReportsPage from "./pages/citizen/MyReportsPage.jsx";
+import TrackCollectionPage from "./pages/citizen/TrackCollectionPage.jsx";
+import CommunityPage from "./pages/citizen/CommunityPage.jsx";
+import CitizenProfilePage from "./pages/citizen/CitizenProfilePage.jsx";
+
+// Admin Pages
+import AdminOverviewPage from "./pages/admin/AdminOverviewPage.jsx";
+import AllReportsPage from "./pages/admin/AllReportsPage.jsx";
+import PriorityQueuePage from "./pages/admin/PriorityQueuePage.jsx";
+import HotspotManagementPage from "./pages/admin/HotspotManagementPage.jsx";
+import RouteOptimizationPage from "./pages/admin/RouteOptimizationPage.jsx";
+import VehicleManagementPage from "./pages/admin/VehicleManagementPage.jsx";
+import WorkerManagementPage from "./pages/admin/WorkerManagementPage.jsx";
+import AnalyticsPage from "./pages/admin/AnalyticsPage.jsx";
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage.jsx";
+
+// Driver Pages
+import DriverOverviewPage from "./pages/driver/DriverOverviewPage.jsx";
+import AssignedCollectionsPage from "./pages/driver/AssignedCollectionsPage.jsx";
+import DriverNavigationPage from "./pages/driver/DriverNavigationPage.jsx";
+import DriverHistoryPage from "./pages/driver/DriverHistoryPage.jsx";
+import DriverProfilePage from "./pages/driver/DriverProfilePage.jsx";
+
+export default function App() {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <AppProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Website Routes */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/live-map" element={<LiveMapPage />} />
+            <Route path="/login" element={<LoginPage />} />
+          </Route>
 
-      <div className="ticks"></div>
+          {/* Citizen Portal Routes */}
+          <Route path="/citizen" element={<DashboardLayout />}>
+            <Route index element={<Navigate to="/citizen/dashboard" replace />} />
+            <Route path="dashboard" element={<CitizenDashboard />} />
+            <Route path="report" element={<ReportWastePage />} />
+            <Route path="ai-analysis" element={<AIAnalysisPage />} />
+            <Route path="my-reports" element={<MyReportsPage />} />
+            <Route path="track" element={<TrackCollectionPage />} />
+            <Route path="community" element={<CommunityPage />} />
+            <Route path="profile" element={<CitizenProfilePage />} />
+          </Route>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {/* Admin Command Centre Routes */}
+          <Route path="/admin" element={<DashboardLayout />}>
+            <Route index element={<Navigate to="/admin/overview" replace />} />
+            <Route path="overview" element={<AdminOverviewPage />} />
+            <Route path="reports" element={<AllReportsPage />} />
+            <Route path="priority-queue" element={<PriorityQueuePage />} />
+            <Route path="ai-lab" element={<AIAnalysisPage />} />
+            <Route path="hotspots" element={<HotspotManagementPage />} />
+            <Route path="route-optimization" element={<RouteOptimizationPage />} />
+            <Route path="vehicles" element={<VehicleManagementPage />} />
+            <Route path="workers" element={<WorkerManagementPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
+          </Route>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          {/* Driver Fleet Portal Routes */}
+          <Route path="/driver" element={<DashboardLayout />}>
+            <Route index element={<Navigate to="/driver/overview" replace />} />
+            <Route path="overview" element={<DriverOverviewPage />} />
+            <Route path="tasks" element={<AssignedCollectionsPage />} />
+            <Route path="navigation" element={<DriverNavigationPage />} />
+            <Route path="history" element={<DriverHistoryPage />} />
+            <Route path="profile" element={<DriverProfilePage />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AppProvider>
+  );
 }
-
-export default App
