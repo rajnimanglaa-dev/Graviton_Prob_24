@@ -10,6 +10,7 @@ export default function CleaningProofModal({ report, isOpen, onClose }) {
   const [notes, setNotes] = useState("Waste fully loaded into compactor unit. Ground swept clean and sanitized.");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customFileSelected, setCustomFileSelected] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   if (!isOpen || !report) return null;
 
@@ -19,6 +20,12 @@ export default function CleaningProofModal({ report, isOpen, onClose }) {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setSubmitError("Photo must be 5 MB or smaller.");
+        e.target.value = "";
+        return;
+      }
+      setSubmitError("");
       const reader = new FileReader();
       reader.onload = () => {
         setCleaningPhoto(reader.result);
@@ -28,18 +35,21 @@ export default function CleaningProofModal({ report, isOpen, onClose }) {
     }
   };
 
-  const handleSubmitProof = () => {
+  const handleSubmitProof = async () => {
     if (!cleaningPhoto) return;
-
+    setSubmitError("");
     setIsSubmitting(true);
-    setTimeout(() => {
-      updateDriverTaskStatus(report.id, "collected", {
+    try {
+      await updateDriverTaskStatus(report.id, "collected", {
         afterImageUrl: cleaningPhoto,
         note: notes
       });
-      setIsSubmitting(false);
       onClose();
-    }, 500);
+    } catch (error) {
+      setSubmitError(error.userMessage || error.message || "Could not save cleaning proof. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -119,6 +129,8 @@ export default function CleaningProofModal({ report, isOpen, onClose }) {
               </div>
             </div>
           </div>
+
+          {submitError && <p role="alert" className="rounded-xl border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">{submitError}</p>}
 
           {/* Photo Selection / Upload Controls */}
           <div>

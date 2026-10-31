@@ -1,20 +1,16 @@
 # Click 2 Clean (FixMyArea)
 
-Click 2 Clean is the product name for the FixMyArea waste-reporting platform. The project includes a React interface and an Express/MySQL API for reports, SMS ingestion, image upload, notifications, AI assessment, and road-network routing.
+Click 2 Clean is the product name for the FixMyArea waste-reporting platform. The project includes a React interface and an Express API. The default local demo uses a JSON file store so citizen reports, admin assignments, and driver status updates are shared and persist between restarts without requiring a MySQL setup.
 
 ## Start locally
 
-1. Create an empty MySQL database named fixmyarea.
-2. Copy backend/.env.example to backend/.env and set DB values plus a unique JWT_SECRET.
-3. Run npm install.
-4. Run npm run db:migrate.
-5. Run npm run db:seed.
-6. In two terminals, run npm run server:dev and npm run dev.
-7. Open http://localhost:5173.
+1. Run `npm install`.
+2. Run `npm run dev`.
+3. Open http://localhost:5173. This starts Vite and the local API together.
 
 ## Seed accounts
 
-All seeded accounts use password DemoPass123!.
+The local demo accounts use password `DemoPass123!`.
 
 | Role | Email |
 | --- | --- |
@@ -22,7 +18,11 @@ All seeded accounts use password DemoPass123!.
 | Administrator | admin@fixmyarea.local |
 | Driver | driver@fixmyarea.local |
 
-The frontend has no role switcher. Backend role checks protect every private API action.
+Sign in with separate demo accounts to view citizen, administrator, and driver workflows. Reports and uploaded photos are stored under `backend/data` for this local demo. Do not use this demo server as a public production deployment.
+
+## Optional MySQL backend
+
+The original MySQL-backed API remains available with `npm run server:mysql`. Create a MySQL database, copy `backend/.env.example` to `backend/.env`, set database credentials and a unique JWT secret, then run `npm run db:migrate` and `npm run db:seed` before starting that server. The default `npm run dev` command uses the file-backed demo API instead.
 
 ## Environment
 

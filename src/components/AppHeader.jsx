@@ -1,15 +1,37 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Bell, Check, Globe, LogOut, Menu } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Bell, Check, ChevronDown, Globe, LogOut, Menu, Shield, Truck, UserRound } from 'lucide-react';
 import { useApp } from '../context/AppContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function AppHeader({ onToggleSidebar }) {
-  const { currentUser, notifications, markAllNotificationsRead } = useApp();
+  const { currentUser, notifications, markAllNotificationsRead, switchRole } = useApp();
   const { logout } = useAuth();
+  const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [switchingRole, setSwitchingRole] = useState('');
+  const [portalError, setPortalError] = useState('');
+  const portalMenuRef = useRef(null);
   const unreadCount = notifications.filter((notification) => !notification.read).length;
   const portalTitle = currentUser.role === 'admin' ? 'Municipal Command Centre' : currentUser.role === 'driver' ? 'Driver Fleet Console' : 'Citizen Waste Portal';
+  const portals = [
+    { label: 'Citizen', role: 'citizen', path: '/citizen/dashboard', Icon: UserRound },
+    { label: 'Administrator', role: 'admin', path: '/admin/overview', Icon: Shield },
+    { label: 'Driver', role: 'driver', path: '/driver/overview', Icon: Truck }
+  ];
+  const openPortal = async (portal) => {
+    setPortalError('');
+    setSwitchingRole(portal.role);
+    try {
+      await switchRole(portal.role);
+      if (portalMenuRef.current) portalMenuRef.current.open = false;
+      navigate(portal.path);
+    } catch (error) {
+      setPortalError(error.userMessage || error.message || 'Could not switch portal. Make sure the local API is running.');
+    } finally {
+      setSwitchingRole('');
+    }
+  };
 
   return (
     <header className="h-16 bg-[#142820]/90 backdrop-blur-md border-b border-[#273b33] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
@@ -24,6 +46,13 @@ export default function AppHeader({ onToggleSidebar }) {
         </div>
       </div>
       <div className="flex items-center gap-2.5">
+        <details ref={portalMenuRef} className="relative">
+          <summary className="list-none cursor-pointer inline-flex items-center gap-1 px-2.5 py-2 rounded-xl border border-[#273b33] bg-[#1D2B25] text-[#F5F7F5] hover:text-[#8BE0B0] text-xs font-semibold [&::-webkit-details-marker]:hidden"><span className="hidden sm:inline">Switch portal</span><span className="sm:hidden">Portals</span><ChevronDown size={13} /></summary>
+          <div className="absolute right-0 top-full mt-2 w-56 p-2 rounded-2xl bg-[#1D2B25] border border-[#273b33] shadow-2xl z-50">
+            {portals.map(({ Icon, ...portal }) => <button key={portal.role} type="button" disabled={Boolean(switchingRole)} onClick={() => openPortal(portal)} className="w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl text-left text-xs font-semibold text-[#F5F7F5] hover:bg-[#142820] disabled:opacity-50"><Icon size={15} className="text-[#8BE0B0]" /><span className="flex-1">{switchingRole === portal.role ? 'Opening…' : portal.label}</span>{currentUser.role === portal.role && <span className="text-[9px] text-[#8BE0B0]">ACTIVE</span>}</button>)}
+            {portalError && <p role="alert" className="px-2.5 py-2 text-[11px] text-red-300">{portalError}</p>}
+          </div>
+        </details>
         <Link to="/" title="Go to public website" className="p-2 rounded-xl text-[#A5B3AA] hover:bg-[#1D2B25] hover:text-[#8BE0B0] transition text-xs font-semibold hidden sm:flex items-center gap-1.5"><Globe size={16} /><span>Public Site</span></Link>
         <div className="relative">
           <button onClick={() => setShowNotifications((open) => !open)} aria-label="Toggle notifications menu" className="p-2 rounded-xl text-[#A5B3AA] hover:bg-[#1D2B25] hover:text-white relative transition">

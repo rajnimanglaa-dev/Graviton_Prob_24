@@ -4,8 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "server": "node backend/server.js",
+    "dev": "node dev.mjs",
+    "server": "node backend/fileServer.js",
+    "server:mysql": "node backend/server.js",
     "server:dev": "nodemon backend/server.js",
     "db:migrate": "node backend/scripts/migrate.js",
     "db:seed": "node backend/scripts/seed.js",

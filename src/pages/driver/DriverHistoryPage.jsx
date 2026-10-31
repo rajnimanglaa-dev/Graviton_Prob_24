@@ -10,6 +10,7 @@ export default function DriverHistoryPage() {
 
   // Completed or resolved reports
   const completedReports = reports.filter(r =>
+    (r.assignedVehicleId === currentUser.assignedTruckId || r.assignedDriverName === currentUser.name) &&
     (r.status === "collected" || r.status === "resolved")
   );
 

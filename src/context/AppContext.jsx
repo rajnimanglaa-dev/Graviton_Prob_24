@@ -36,7 +36,7 @@ const defaultSettings = {
 };
 
 export function AppProvider({ children }) {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const queryClient = useQueryClient();
   const [settings, setSettingsState] = useState(() => getStoredValue(SETTINGS_KEY, defaultSettings));
   const [events, setEvents] = useState(CLEANUP_EVENTS);
@@ -89,6 +89,17 @@ export function AppProvider({ children }) {
     queryClient.invalidateQueries({ queryKey: ['routes'] });
   }, [queryClient]);
   const setSettings = useCallback((next) => setSettingsState((current) => typeof next === 'function' ? next(current) : next), []);
+  const switchRole = useCallback(async (role) => {
+    const demoAccounts = {
+      citizen: 'citizen@fixmyarea.local',
+      admin: 'admin@fixmyarea.local',
+      administrator: 'admin@fixmyarea.local',
+      driver: 'driver@fixmyarea.local'
+    };
+    const email = demoAccounts[role];
+    if (!email) throw new Error('Unknown demo role.');
+    return login({ email, password: 'DemoPass123!' });
+  }, [login]);
 
   const createReport = useMutation({
     mutationFn: async ({ file, title, category, description, location, idempotencyKey }) => {
@@ -107,7 +118,7 @@ export function AppProvider({ children }) {
     onSuccess: refreshServerState
   });
   const updateStatus = useMutation({
-    mutationFn: async ({ reportId, status, note }) => (await api.patch('/reports/' + reportId + '/status', { status, note })).data.report,
+    mutationFn: async ({ reportId, status, note, afterImageUrl }) => (await api.patch('/reports/' + reportId + '/status', { status, note, afterImageUrl })).data.report,
     onSuccess: refreshServerState
   });
   const verify = useMutation({
@@ -150,11 +161,12 @@ export function AppProvider({ children }) {
     isLoading: reportsQuery.isLoading || vehiclesQuery.isLoading,
     serverError: reportsQuery.error || vehiclesQuery.error || notificationsQuery.error,
     setSettings,
+    switchRole,
     submitReport: createReport.mutateAsync,
     verifyReport: (reportId, details = {}) => verify.mutateAsync({ reportId, action: 'verify', ...details }),
     rejectReport: (reportId, reason) => verify.mutateAsync({ reportId, action: 'reject', reason }),
     assignVehicleToReport: (reportId, vehicleId, note) => assignment.mutateAsync({ reportId, vehicleId, note }),
-    updateDriverTaskStatus: (reportId, status, options = {}) => updateStatus.mutateAsync({ reportId, status, note: options.note }),
+    updateDriverTaskStatus: (reportId, status, options = {}) => updateStatus.mutateAsync({ reportId, status, note: options.note, afterImageUrl: options.afterImageUrl }),
     resolveReport: (reportId) => updateStatus.mutateAsync({ reportId, status: 'resolved', note: 'Final municipal inspection verified the report as resolved.' }),
     markAllNotificationsRead,
     rsvpEvent,

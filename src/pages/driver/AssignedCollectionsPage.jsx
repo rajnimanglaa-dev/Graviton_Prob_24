@@ -20,7 +20,7 @@ export default function AssignedCollectionsPage() {
   const { currentUser, vehicles, reports, updateDriverTaskStatus } = useApp();
 
   const myTruck = vehicles.find(v => v.id === currentUser.assignedTruckId) || vehicles[0];
-  const assignedTasks = reports.filter(r => r.assignedVehicleId === myTruck.id && r.status !== "resolved");
+  const assignedTasks = reports.filter(r => (r.assignedVehicleId === myTruck.id || r.assignedDriverName === currentUser.name) && r.status !== "resolved");
 
   const [activeProofReport, setActiveProofReport] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);

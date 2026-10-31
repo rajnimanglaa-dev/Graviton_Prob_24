@@ -21,8 +21,9 @@ export default function DriverOverviewPage() {
   const { currentUser, vehicles, reports, updateDriverTaskStatus } = useApp();
 
   const myTruck = vehicles.find(v => v.id === currentUser.assignedTruckId) || vehicles[0];
-  const assignedTasks = reports.filter(r => r.assignedVehicleId === myTruck.id && r.status !== "resolved");
-  const completedTasks = reports.filter(r => r.assignedVehicleId === myTruck.id && (r.status === "collected" || r.status === "resolved"));
+  const belongsToDriver = report => report.assignedVehicleId === myTruck.id || report.assignedDriverName === currentUser.name;
+  const assignedTasks = reports.filter(r => belongsToDriver(r) && r.status !== "resolved");
+  const completedTasks = reports.filter(r => belongsToDriver(r) && (r.status === "collected" || r.status === "resolved"));
 
   const [activeProofReport, setActiveProofReport] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);

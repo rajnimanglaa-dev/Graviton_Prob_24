@@ -59,7 +59,7 @@ export default function Sidebar({ isOpen, onClose }) {
   ];
 
   // Driver Navigation Links
-  const driverAssignedTasks = reports.filter(r => r.assignedVehicleId === currentUser.assignedTruckId && r.status !== "resolved");
+  const driverAssignedTasks = reports.filter(r => (r.assignedVehicleId === currentUser.assignedTruckId || r.assignedDriverName === currentUser.name) && r.status !== "resolved");
   const driverLinks = [
     { label: "Driver Overview", path: "/driver/overview", icon: LayoutDashboard },
     { label: "Assigned Collections", path: "/driver/tasks", icon: Truck, count: driverAssignedTasks.length, badgeColor: "bg-amber-500" },
