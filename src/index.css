@@ -84,6 +84,25 @@ html[data-theme="light"] .leaflet-popup-tip { background: #FFFFFF !important; co
 
 html[data-theme="light"] [class*="bg-black/70"] { background-color: rgb(20 35 27 / 35%) !important; }
 
+/* Light theme hover overrides - prevent dark hex classes from turning black on hover */
+html[data-theme="light"] [class*="hover:bg-[#1D2B25]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#142820]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#101A17]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#273b33]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#24382F]"]:hover,
+html[data-theme="light"] [class*="hover:bg-[#24362f]"]:hover {
+  background-color: var(--surface-hover) !important;
+}
+
+html[data-theme="light"] [class*="hover:text-[#F5F7F5]"]:hover,
+html[data-theme="light"] [class*="hover:text-white"]:hover {
+  color: var(--ink-strong) !important;
+}
+
+html[data-theme="light"] [class*="hover:text-[#8BE0B0]"]:hover {
+  color: var(--ink-accent) !important;
+}
+
 /* Custom scrollbars for dark environmental UI */
 ::-webkit-scrollbar {
   width: 6px;
