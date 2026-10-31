@@ -11,7 +11,8 @@ const STORAGE_KEYS = {
   USER: "smartwaste_v1_current_user",
   NOTIFICATIONS: "smartwaste_v1_notifications",
   SETTINGS: "smartwaste_v1_settings",
-  EVENTS: "smartwaste_v1_events"
+  EVENTS: "smartwaste_v1_events",
+  HOTSPOT_ACTIONS: "smartwaste_v1_hotspot_actions"
 };
 
 const DEFAULT_SETTINGS = {
@@ -94,6 +95,14 @@ export function AppProvider({ children }) {
     }
   });
 
+  const [hotspotActions, setHotspotActions] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.HOTSPOT_ACTIONS)) || {};
+    } catch (e) {
+      return {};
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(reports));
   }, [reports]);
@@ -117,6 +126,10 @@ export function AppProvider({ children }) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(events));
   }, [events]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.HOTSPOT_ACTIONS, JSON.stringify(hotspotActions));
+  }, [hotspotActions]);
 
   const addNotification = (title, message, role = "all") => {
     const newNtf = {
@@ -445,12 +458,28 @@ export function AppProvider({ children }) {
     addNotification("RSVP Confirmed", "You registered for the clean-up event! +50 EcoPoints awarded.", "citizen");
   };
 
+  const recordHotspotAction = (hotspotId, action, note = "") => {
+    const entry = {
+      id: `ACT-${Date.now()}`,
+      action,
+      note,
+      createdAt: new Date().toISOString(),
+      actor: currentUser.name || "Municipal team"
+    };
+    setHotspotActions(prev => ({
+      ...prev,
+      [hotspotId]: [...(prev[hotspotId] || []), entry]
+    }));
+    addNotification("Hotspot intervention recorded", `${action} logged for hotspot ${hotspotId}.`, "admin");
+  };
+
   const resetToDemoData = () => {
     setReports(INITIAL_REPORTS);
     setVehicles(INITIAL_VEHICLES);
     setCurrentUser(DEMO_USERS.citizen);
     setSettings(DEFAULT_SETTINGS);
     setEvents(CLEANUP_EVENTS);
+    setHotspotActions({});
     localStorage.clear();
     addNotification("Demo Data Reset", "System successfully restored to initial demo state.", "all");
   };
@@ -462,6 +491,7 @@ export function AppProvider({ children }) {
     notifications,
     settings,
     events,
+    hotspotActions,
     setSettings,
     switchRole,
     loginAs,
@@ -472,6 +502,7 @@ export function AppProvider({ children }) {
     updateDriverTaskStatus,
     resolveReport,
     rsvpEvent,
+    recordHotspotAction,
     resetToDemoData,
     addNotification,
     markAllNotificationsRead,

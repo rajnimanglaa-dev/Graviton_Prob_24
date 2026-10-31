@@ -8,7 +8,7 @@ export default function PublicLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-[#101A17] text-[#F5F7F5] relative selection:bg-[#16A36A] selection:text-white">
       {/* Real Cinematic Video Animation Background with Dark Green Overlay */}
-      <VideoBackground showControls={true} opacity="opacity-35" />
+      <VideoBackground showControls={true} opacity="opacity-45" />
 
       {/* Main UI Layer */}
       <div className="relative z-10 flex-1 flex flex-col">

@@ -10,7 +10,7 @@ export default function DashboardLayout() {
   return (
     <div className="min-h-screen bg-[#101A17] text-[#F5F7F5] flex relative selection:bg-[#16A36A] selection:text-white">
       {/* Subtle Ambient Video Animation Background */}
-      <VideoBackground showControls={false} opacity="opacity-20" />
+      <VideoBackground showControls={false} opacity="opacity-35" />
 
       {/* Sidebar Navigation */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />

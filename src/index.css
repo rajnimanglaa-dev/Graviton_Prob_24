@@ -154,6 +154,26 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   }
 }
 
+@keyframes ambientDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(7vw, 5vh, 0) scale(1.12); }
+}
+
+@keyframes ambientDriftReverse {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.08); }
+  50% { transform: translate3d(-6vw, -4vh, 0) scale(0.96); }
+}
+
+.animate-ambient-drift { animation: ambientDrift 22s ease-in-out infinite; }
+.animate-ambient-drift-reverse { animation: ambientDriftReverse 28s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ambient-drift,
+  .animate-ambient-drift-reverse {
+    animation: none;
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

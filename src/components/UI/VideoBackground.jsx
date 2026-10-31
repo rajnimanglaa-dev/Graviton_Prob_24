@@ -70,10 +70,10 @@ export default function VideoBackground({ showControls = false, opacity = "opaci
     const particles = Array.from({ length: particleCount }).map(() => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      radius: Math.random() * 2.0 + 0.6,
+      radius: Math.random() * 2.8 + 1.1,
       speedX: Math.random() * 0.3 - 0.15,
       speedY: -Math.random() * 0.4 - 0.1,
-      alpha: Math.random() * 0.35 + 0.1,
+      alpha: Math.random() * 0.45 + 0.28,
       pulse: Math.random() * 0.02 + 0.005
     }));
 
@@ -83,7 +83,7 @@ export default function VideoBackground({ showControls = false, opacity = "opaci
       particles.forEach((p) => {
         p.x += p.speedX;
         p.y += p.speedY;
-        p.alpha += Math.sin(Date.now() * p.pulse) * 0.003;
+        p.alpha += Math.sin(Date.now() * p.pulse) * 0.006;
 
         if (p.y < -10) {
           p.y = height + 10;
@@ -94,9 +94,9 @@ export default function VideoBackground({ showControls = false, opacity = "opaci
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(139, 224, 176, ${Math.max(0.04, Math.min(0.4, p.alpha))})`;
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = "rgba(22, 163, 106, 0.4)";
+        ctx.fillStyle = `rgba(177, 255, 210, ${Math.max(0.2, Math.min(0.82, p.alpha))})`;
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = "rgba(65, 230, 153, 0.9)";
         ctx.fill();
         ctx.shadowBlur = 0;
       });
@@ -125,7 +125,7 @@ export default function VideoBackground({ showControls = false, opacity = "opaci
         poster={currentScene.poster}
         onLoadedData={() => setIsVideoLoaded(true)}
         className={`w-full h-full object-cover transition-opacity duration-1000 ${opacity} ${
-          isVideoLoaded ? "filter saturate-[1.15] contrast-[1.1]" : "opacity-15"
+          isVideoLoaded ? "filter saturate-[1.4] contrast-[1.15] brightness-[1.18]" : "opacity-30"
         }`}
         style={{ transform: "scale(1.04)" }}
       >
@@ -143,18 +143,20 @@ export default function VideoBackground({ showControls = false, opacity = "opaci
       {/* 3. Ambient Canvas: Organic Green Motes */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full pointer-events-none opacity-50"
+        className="absolute inset-0 w-full h-full pointer-events-none opacity-100"
       />
 
       {/* 4. Film Grading & Dark Green Environmental Masks */}
       {/* Deep environmental dark background overlay ensuring high contrast readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#101A17]/92 via-[#101A17]/85 to-[#101A17]/96" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#101A17]/60 via-[#101A17]/48 to-[#101A17]/66" />
 
       {/* Ambient Forest Green cinematic tint */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-[#142820]/60 via-transparent to-[#16A36A]/10" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-[#142820]/35 via-transparent to-[#16A36A]/25" />
 
       {/* Radial perimeter vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_45%,rgba(16,26,23,0.85)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_58%,rgba(16,26,23,0.48)_100%)]" />
+      <div className="absolute -top-40 -left-32 w-[34rem] h-[34rem] rounded-full bg-[#16A36A]/10 blur-[110px] animate-ambient-drift" />
+      <div className="absolute -bottom-56 right-[-8rem] w-[38rem] h-[38rem] rounded-full bg-[#3987F5]/[0.07] blur-[130px] animate-ambient-drift-reverse" />
 
       {/* 5. Optional Video Controls Dock */}
       {showControls && (
