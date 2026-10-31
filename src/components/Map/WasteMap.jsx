@@ -141,10 +141,10 @@ export default function WasteMap({
       attributionControl: true
     });
 
-    // CartoDB Dark Matter tiles for premium dark environmental-tech theme
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
-      subdomains: "abcd",
+    // OpenStreetMap raster tiles keep the map available without a provider API key.
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
+      subdomains: "abc",
       maxZoom: 19
     }).addTo(map);
 

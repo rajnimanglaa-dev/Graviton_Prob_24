@@ -4,6 +4,7 @@ import { useApp } from "../../context/AppContext.jsx";
 import { findNearbyDuplicates } from "../../services/geoService.js";
 import { getWasteVisualCategory } from "../../services/wasteCategoryTheme.js";
 import AnimatedDustbin from "../../components/UI/AnimatedDustbin.jsx";
+import LocationPickerMap from "../../components/Map/LocationPickerMap.jsx";
 import {
   Camera,
   Upload,
@@ -98,6 +99,18 @@ export default function ReportWastePage() {
       setIsLocating(false);
       setFormError("Geolocation is unavailable. Enter the address manually.");
     }
+  };
+
+  const handleMapLocationChange = ({ lat, lng, address }) => {
+    setLocation((current) => ({
+      ...current,
+      lat,
+      lng,
+      address: !current.address.trim() || /^(Map pin|GPS Pin)/.test(current.address.trim())
+        ? address
+        : current.address,
+      ward: current.ward || "Ward 7 - Civil Lines"
+    }));
   };
 
   // Submit Handler
@@ -240,6 +253,21 @@ export default function ReportWastePage() {
               <MapPin size={13} className="text-[#16A36A]" />
               <span>{isLocating ? "Detecting GPS..." : "Auto-Detect My GPS"}</span>
             </button>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-bold text-[#F5F7F5]">Choose the exact spot on the map</p>
+                <p className="text-[11px] text-[#A5B3AA]">Click the map or drag the pin. You can also use GPS above.</p>
+              </div>
+              <span className="rounded-lg bg-[#142820] px-2.5 py-1.5 text-[11px] font-mono text-[#8BE0B0]">
+                {location.lat != null && location.lng != null
+                  ? `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`
+                  : "Coordinates not selected"}
+              </span>
+            </div>
+            <LocationPickerMap location={location} onLocationChange={handleMapLocationChange} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
